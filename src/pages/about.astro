@@ -1,0 +1,47 @@
+---
+import Layout from '../layouts/BlogPost.astro';
+---
+
+<Layout
+	title="About ZipperGen"
+	description="ZipperGen — a Python DSL for structured multi-agent LLM coordination."
+	pubDate={new Date('2025-01-01')}
+>
+	<p>
+		<strong>ZipperGen</strong> is a Python DSL and runtime for structured multi-agent LLM
+		coordination, grounded in the theory of Message Sequence Charts (MSCs). You write a single
+		global protocol; ZipperGen projects it onto each agent and runs them concurrently, with
+		deadlock-freedom guaranteed by construction.
+	</p>
+
+	<h2>The idea</h2>
+	<p>
+		Multi-agent frameworks typically assemble pipelines from callbacks and tool calls, with no
+		global view of coordination and no formal semantics. ZipperGen takes a different approach: you
+		describe the entire choreography once, as a global workflow, and the framework automatically
+		derives the local program for each agent. The theoretical foundation comes from the study of
+		Message Sequence Charts and communicating automata — a well-developed area of formal methods.
+	</p>
+
+	<h2>What you get</h2>
+	<ul>
+		<li>A clean Python DSL for writing global coordination protocols</li>
+		<li>Automatic projection onto per-agent local programs</li>
+		<li>Concurrent execution with FIFO message queues</li>
+		<li>Deadlock-freedom for the coordination layer, by construction</li>
+		<li>Built-in backends for OpenAI, Mistral, and Claude</li>
+		<li>ZipperChat: a live message-sequence-chart viewer in your browser</li>
+	</ul>
+
+	<h2>The team</h2>
+	<p>
+		ZipperGen is developed by Benedikt Bollig, Matthias Függer, and Thomas Nowak at
+		Université Paris-Saclay, CNRS, ENS Paris-Saclay, and LMF. It accompanies the paper
+		<em>Provable Coordination for LLM Agents via Message Sequence Charts</em>.
+	</p>
+
+	<h2>Links</h2>
+	<ul>
+		<li><a href="https://github.com/zippergen-io/zippergen">GitHub — zippergen-io/zippergen</a></li>
+	</ul>
+</Layout>

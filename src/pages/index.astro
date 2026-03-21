@@ -1,0 +1,114 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1>
+				<span class="zip-icon"><img src="/AgentZipper.svg" alt="Zip" /></span> Hello, Zip!
+			</h1>
+			<p>
+				<strong>ZipperGen</strong> is a Python DSL and runtime for structured multi-agent LLM
+				coordination. You write a single global protocol describing what messages flow between which
+				agents and who owns each decision. ZipperGen projects it onto each agent and runs them
+				concurrently — with deadlock-freedom guaranteed by construction.
+			</p>
+			<h2>Quick start</h2>
+			<pre><code>git clone https://github.com/zippergen-io/zippergen.git
+cd zippergen
+pip install -e .</code></pre>
+			<p>Python 3.11 or later required.</p>
+			<h2>Hello, World!</h2>
+			<p>
+				Define lifelines, write a global workflow, and call it like a normal Python function:
+			</p>
+			<pre><code>from zippergen.syntax import Lifeline, Var
+from zippergen.actions import pure
+from zippergen.builder import workflow
+
+User    = Lifeline("User")
+Compute = Lifeline("Compute")
+number  = Var("number", int)
+
+@pure
+def inc(x: int) -> int:
+    return x + 1
+
+@workflow
+def increment(number: int @ User) -> int:
+    User(number) >> Compute(number)
+    Compute: number = inc(number)
+    Compute(number) >> User(number)
+    return number @ User
+
+result = increment(number=1)   # -> 2</code></pre>
+			<h2>Using real LLMs</h2>
+			<p>
+				Set your API key, pass a provider name, and run:
+			</p>
+			<pre><code>export OPENAI_API_KEY=...
+
+my_workflow.configure(llms="openai", ui=True)
+result = my_workflow(notes="...", diagnosis="...")</code></pre>
+			<p>
+				Built-in providers: <code>openai</code>, <code>mistral</code>, <code>claude</code>.
+				Different agents can use different providers:
+			</p>
+			<pre><code>my_workflow.configure(llms=&#123;"LLM1": "mistral", "LLM2": "openai"&#125;)</code></pre>
+			<h2>ZipperChat</h2>
+			<p>
+				Pass <code>ui=True</code> to open a live message-sequence-chart in your browser as the
+				agents run. Watch who sends what, who is thinking, and where the workflow currently is.
+			</p>
+			<h2>Learn more</h2>
+			<ul>
+				<li>
+					<a href="https://github.com/zippergen-io/zippergen">GitHub — zippergen-io/zippergen</a>
+				</li>
+				<li>
+					<a href="/blog">About</a>
+				</li>
+			</ul>
+		</main>
+		<Footer />
+	</body>
+</html>
+
+<style>
+	h1 {
+		display: flex;
+		align-items: center;
+		gap: 0.3em;
+	}
+	h2 {
+		margin-top: 0.75em;
+	}
+	.zip-icon img {
+		height: 1.15em;
+		width: auto;
+		display: block;
+		max-width: none;
+		position: relative;
+		top: -6px;
+	}
+	pre {
+		background: rgb(var(--gray-light));
+		padding: 1em 1.2em;
+		border-radius: 8px;
+		overflow-x: auto;
+	}
+	pre > code {
+		all: unset;
+		font-family: monospace;
+		font-size: 0.85em;
+	}
+</style>

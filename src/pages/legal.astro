@@ -1,0 +1,48 @@
+---
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title="Legal Notice — ZipperGen" description="Legal notice for zippergen.io" />
+		<style>
+			h2 {
+				margin-top: 0.9em;
+				margin-bottom: 0.3em;
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1>Mentions légales</h1>
+
+			<p>This website is a personal academic project.</p>
+
+			<h2>Editor</h2>
+			<address>
+				Benedikt Bollig<br />
+				LMF – CNRS &amp; ENS Paris-Saclay<br />
+				4, avenue des Sciences<br />
+				91190 Gif-sur-Yvette, France<br />
+				Office: 2S60<br />
+				Email: <a href="mailto:bollig@lmf.cnrs.fr">bollig@lmf.cnrs.fr</a><br />
+				Phone: +33 (0)1 81 87 54 32
+			</address>
+
+			<h2>Hosting</h2>
+			<address>
+				Cloudflare, Inc.<br />
+				101 Townsend St.<br />
+				San Francisco, CA 94107, USA
+			</address>
+
+			<h2>Privacy</h2>
+			<p>This site does not collect personal data and does not use cookies.</p>
+		</main>
+		<Footer />
+	</body>
+</html>

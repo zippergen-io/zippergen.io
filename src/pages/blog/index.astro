@@ -1,0 +1,32 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import Header from '../../components/Header.astro';
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title="About — ZipperGen" description="About ZipperGen" />
+	</head>
+	<body>
+		<Header />
+		<main>
+			<h1>About</h1>
+			<p>
+				<strong>ZipperGen</strong> is a Python DSL and runtime for structured multi-agent LLM
+				coordination, grounded in the theory of Message Sequence Charts. You write a single global
+				protocol; ZipperGen projects it onto each agent and runs them concurrently, with
+				deadlock-freedom guaranteed by construction.
+			</p>
+			<p>
+				The project accompanies the forthcoming paper
+				<em>Provable Coordination for LLM Agents via Message Sequence Charts</em>.
+			</p>
+			<p>
+				<a href="https://github.com/zippergen-io/zippergen">github.com/zippergen-io/zippergen</a>
+			</p>
+		</main>
+		<Footer />
+	</body>
+</html>
