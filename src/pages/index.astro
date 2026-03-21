@@ -64,12 +64,18 @@ result = my_workflow(notes="...", diagnosis="...")</code></pre>
 				Different agents can use different providers:
 			</p>
 			<pre><code>my_workflow.configure(llms=&#123;"LLM1": "mistral", "LLM2": "openai"&#125;)</code></pre>
-			<h2>ZipperChat</h2>
-			<p>
-				Pass <code>ui=True</code> to open a live message-sequence-chart in your browser as the
-				agents run. Watch who sends what, who is thinking, and where the workflow currently is.
-			</p>
-			<h2>Learn more</h2>
+				<h2>ZipperChat</h2>
+				<p>
+					Pass <code>ui=True</code> to open a live message-sequence-chart in your browser as the
+					agents run. Watch who sends what, who is thinking, and where the workflow currently is.
+				</p>
+				<figure class="chat-shot">
+					<img
+						src="/zipperchat-screenshot.png"
+						alt="ZipperChat showing a diagnosis workflow execution as a live message sequence chart"
+					/>
+				</figure>
+				<h2>Learn more</h2>
 			<ul>
 				<li>
 					<a href="https://github.com/zippergen-io/zippergen">GitHub — zippergen-io/zippergen</a>
@@ -111,4 +117,15 @@ result = my_workflow(notes="...", diagnosis="...")</code></pre>
 		font-family: monospace;
 		font-size: 0.85em;
 	}
-</style>
+	.chat-shot {
+		margin: 1rem 0 0.5rem;
+	}
+	.chat-shot img {
+		display: block;
+		width: 100%;
+		max-width: 980px;
+		border-radius: 14px;
+		border: 1px solid rgba(var(--gray), 0.18);
+		box-shadow: 0 18px 40px rgba(19, 31, 45, 0.08);
+	}
+	</style>
