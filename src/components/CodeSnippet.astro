@@ -1,0 +1,85 @@
+---
+interface Props {
+  code: string;
+}
+
+const { code } = Astro.props;
+---
+
+<figure class="code-snippet">
+  <button class="copy-btn" type="button" data-code={code} aria-label="Copy code">
+    Copy
+  </button>
+  <pre><code>{code}</code></pre>
+</figure>
+
+<script is:inline>
+  document.addEventListener('click', async (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    const button = target.closest('.copy-btn');
+    if (!(button instanceof HTMLButtonElement)) return;
+    const code = button.dataset.code ?? '';
+    try {
+      await navigator.clipboard.writeText(code);
+      const previous = button.textContent;
+      button.textContent = 'Copied';
+      window.setTimeout(() => {
+        button.textContent = previous ?? 'Copy';
+      }, 1200);
+    } catch {
+      button.textContent = 'Failed';
+      window.setTimeout(() => {
+        button.textContent = 'Copy';
+      }, 1200);
+    }
+  });
+</script>
+
+<style>
+  .code-snippet {
+    position: relative;
+    margin: 0;
+  }
+
+  .copy-btn {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.85rem;
+    border: 1px solid rgba(var(--gray), 0.18);
+    background: rgba(255, 255, 255, 0.92);
+    color: rgb(var(--black));
+    border-radius: 999px;
+    padding: 0.28rem 0.72rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+  }
+
+  .copy-btn:hover {
+    background: white;
+    border-color: rgba(var(--accent), 0.35);
+    transform: translateY(-1px);
+  }
+
+  .copy-btn:focus-visible {
+    outline: 2px solid rgba(var(--accent), 0.45);
+    outline-offset: 2px;
+  }
+
+  pre {
+    background: rgb(var(--gray-light));
+    padding: 1em 1.2em;
+    padding-top: 2.9rem;
+    border-radius: 8px;
+    overflow-x: auto;
+  }
+
+  pre > code {
+    all: unset;
+    font-family: monospace;
+    font-size: 0.85em;
+    white-space: pre;
+  }
+</style>

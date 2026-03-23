@@ -1,5 +1,6 @@
 ---
 import BaseHead from '../components/BaseHead.astro';
+import CodeSnippet from '../components/CodeSnippet.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
@@ -23,15 +24,18 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 				concurrently — with deadlock-freedom guaranteed by construction.
 			</p>
 			<h2>Quick start</h2>
-			<pre><code>git clone https://github.com/zippergen-io/zippergen.git
+			<CodeSnippet
+				code={`git clone https://github.com/zippergen-io/zippergen.git
 cd zippergen
-pip install -e .</code></pre>
+pip install -e .`}
+			/>
 			<p>Python 3.11 or later required.</p>
 			<h2>Hello, World!</h2>
 			<p>
 				Define lifelines, write a global workflow, and call it like a normal Python function:
 			</p>
-			<pre><code>from zippergen.syntax import Lifeline, Var
+			<CodeSnippet
+				code={`from zippergen.syntax import Lifeline, Var
 from zippergen.actions import pure
 from zippergen.builder import workflow
 
@@ -43,27 +47,38 @@ number  = Var("number", int)
 def inc(x: int) -> int:
     return x + 1
 
+@pure
+def double(x: int) -> int:
+    return x * 2
+
 @workflow
 def increment(number: int @ User) -> int:
     User(number) >> Compute(number)
-    Compute: number = inc(number)
+    with Compute:
+        number = inc(number)
+        number = double(number)
     Compute(number) >> User(number)
     return number @ User
 
-result = increment(number=1)   # -> 2</code></pre>
+result = increment(number=1)   # -> 4`}
+			/>
 			<h2>Using real LLMs</h2>
 			<p>
 				Set your API key, pass a provider name, and run:
 			</p>
-			<pre><code>export OPENAI_API_KEY=...
+			<CodeSnippet
+				code={`export OPENAI_API_KEY=...
 
 my_workflow.configure(llms="openai", ui=True)
-result = my_workflow(notes="...", diagnosis="...")</code></pre>
+result = my_workflow(notes="...", diagnosis="...")`}
+			/>
 			<p>
 				Built-in providers: <code>openai</code>, <code>mistral</code>, <code>claude</code>.
 				Different agents can use different providers:
 			</p>
-			<pre><code>my_workflow.configure(llms=&#123;"LLM1": "mistral", "LLM2": "openai"&#125;)</code></pre>
+			<CodeSnippet
+				code={`my_workflow.configure(llms={"LLM1": "mistral", "LLM2": "openai"})`}
+			/>
 				<h2>ZipperChat</h2>
 				<p>
 					Pass <code>ui=True</code> to open a live message-sequence-chart in your browser as the
@@ -105,17 +120,6 @@ result = my_workflow(notes="...", diagnosis="...")</code></pre>
 		max-width: none;
 		position: relative;
 		top: -6px;
-	}
-	pre {
-		background: rgb(var(--gray-light));
-		padding: 1em 1.2em;
-		border-radius: 8px;
-		overflow-x: auto;
-	}
-	pre > code {
-		all: unset;
-		font-family: monospace;
-		font-size: 0.85em;
 	}
 	.chat-shot {
 		margin: 1rem 0 0.5rem;
