@@ -8,7 +8,15 @@ const { code } = Astro.props;
 
 <figure class="code-snippet">
   <button class="copy-btn" type="button" data-code={code} aria-label="Copy code">
-    Copy
+    <!-- copy icon -->
+    <svg class="copy-icon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="9" y="9" width="13" height="13" rx="2"/>
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+    </svg>
+    <!-- check icon -->
+    <svg class="check-icon" xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
   </button>
   <pre><code>{code}</code></pre>
 </figure>
@@ -16,22 +24,16 @@ const { code } = Astro.props;
 <script is:inline>
   document.addEventListener('click', async (event) => {
     const target = event.target;
-    if (!(target instanceof HTMLElement)) return;
+    if (!(target instanceof Element)) return;
     const button = target.closest('.copy-btn');
     if (!(button instanceof HTMLButtonElement)) return;
     const code = button.dataset.code ?? '';
     try {
       await navigator.clipboard.writeText(code);
-      const previous = button.textContent;
-      button.textContent = 'Copied';
-      window.setTimeout(() => {
-        button.textContent = previous ?? 'Copy';
-      }, 1200);
+      button.classList.add('copied');
+      window.setTimeout(() => button.classList.remove('copied'), 1400);
     } catch {
-      button.textContent = 'Failed';
-      window.setTimeout(() => {
-        button.textContent = 'Copy';
-      }, 1200);
+      button.classList.remove('copied');
     }
   });
 </script>
@@ -42,36 +44,9 @@ const { code } = Astro.props;
     margin: 0;
   }
 
-  .copy-btn {
-    position: absolute;
-    top: 0.75rem;
-    right: 0.85rem;
-    border: 1px solid rgba(var(--gray), 0.18);
-    background: rgba(255, 255, 255, 0.92);
-    color: rgb(var(--black));
-    border-radius: 999px;
-    padding: 0.28rem 0.72rem;
-    font-size: 0.78rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
-  }
-
-  .copy-btn:hover {
-    background: white;
-    border-color: rgba(var(--accent), 0.35);
-    transform: translateY(-1px);
-  }
-
-  .copy-btn:focus-visible {
-    outline: 2px solid rgba(var(--accent), 0.45);
-    outline-offset: 2px;
-  }
-
   pre {
     background: rgb(var(--gray-light));
     padding: 1em 1.2em;
-    padding-top: 2.9rem;
     border-radius: 8px;
     overflow-x: auto;
   }
@@ -82,4 +57,48 @@ const { code } = Astro.props;
     font-size: 0.85em;
     white-space: pre;
   }
+
+  .copy-btn {
+    position: absolute;
+    top: 0.55rem;
+    right: 0.55rem;
+    border: none;
+    background: rgba(var(--gray-light), 0.85);
+    color: rgb(var(--black));
+    border-radius: 5px;
+    width: 1.7rem;
+    height: 1.7rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 120ms ease, background 120ms ease, color 120ms ease;
+  }
+
+  .code-snippet:hover .copy-btn,
+  .code-snippet:focus-within .copy-btn {
+    opacity: 1;
+  }
+
+  .copy-btn:hover {
+    background: rgba(var(--accent), 0.12);
+    color: rgba(var(--accent), 1);
+  }
+
+  .copy-btn:focus-visible {
+    outline: 2px solid rgba(var(--accent), 0.45);
+    outline-offset: 2px;
+    opacity: 1;
+  }
+
+  .check-icon {
+    display: none;
+    color: rgb(var(--black));
+  }
+
+  .copy-btn.copied { opacity: 1; }
+  .copy-btn.copied .copy-icon { display: none; }
+  .copy-btn.copied .check-icon { display: inline-block; }
 </style>
