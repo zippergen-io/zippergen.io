@@ -15,7 +15,7 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 		<Header />
 		<main>
 			<h1>
-				<span class="zip-icon"><img src="/AgentZipper.svg" alt="Zip" /></span> Hello, Zip!
+				<span class="zip-icon"><img src="/AgentZipper.svg" alt="Zip" /></span> Multi-agent coordination that can't deadlock
 			</h1>
 			<p>
 				<strong>ZipperGen</strong> is a Python DSL and runtime for structured multi-agent LLM
@@ -32,35 +32,53 @@ pip install -e .`}
 			<p>Python 3.11 or later required.</p>
 			<h2>Hello, World!</h2>
 			<p>
-				Define lifelines, write a global workflow, and call it like a normal Python function:
+				Three agents collaborate: <code>Writer</code> drafts a tweet, <code>Editor</code> decides
+				whether it's good enough, and ZipperGen handles the coordination. No API key needed — the
+				built-in mock backend runs instantly.
 			</p>
 			<CodeSnippet
 				code={`from zippergen.syntax import Lifeline, Var
-from zippergen.actions import pure
+from zippergen.actions import llm
 from zippergen.builder import workflow
 
-User    = Lifeline("User")
-Compute = Lifeline("Compute")
-number  = Var("number", int)
+User   = Lifeline("User")
+Writer = Lifeline("Writer")
+Editor = Lifeline("Editor")
 
-@pure
-def inc(x: int) -> int:
-    return x + 1
+topic    = Var("topic",    str)
+tweet    = Var("tweet",    str)
+approved = Var("approved", bool)
 
-@pure
-def double(x: int) -> int:
-    return x * 2
+@llm(system="Write a one-sentence tweet about the topic.",
+     user="{topic}", parse="text", outputs=(("tweet", str),))
+def draft(topic: str) -> None: ...
+
+@llm(system="Is this tweet engaging, original, and under 180 chars? Reply true or false.",
+     user="{tweet}", parse="bool", outputs=(("approved", bool),))
+def approve(tweet: str) -> None: ...
+
+@llm(system="Improve this tweet: shorter and punchier.",
+     user="{tweet}", parse="text", outputs=(("tweet", str),))
+def revise(tweet: str) -> None: ...
 
 @workflow
-def increment(number: int @ User) -> int:
-    User(number) >> Compute(number)
-    with Compute:
-        number = inc(number)
-        number = double(number)
-    Compute(number) >> User(number)
-    return number @ User
+def write_tweet(topic: str @ User) -> str:
+    User(topic) >> Writer(topic)
+    Writer: tweet = draft(topic)
+    Writer(tweet) >> Editor(tweet)
+    Editor: approved = approve(tweet)
+    if approved @ Editor:
+        Editor(tweet) >> User(tweet)
+    else:
+        Editor(tweet) >> Writer(tweet)
+        Writer: tweet = revise(tweet)
+        Writer(tweet) >> User(tweet)
+    return tweet @ User
 
-result = increment(number=1)   # -> 4`}
+# No API key needed — runs with the built-in mock backend.
+# Switch to a real LLM: write_tweet.configure(llms="openai")
+result = write_tweet(topic="a git commit message that tells the truth")
+print(result)`}
 			/>
 			<h2>Using real LLMs</h2>
 			<p>
@@ -87,7 +105,7 @@ result = my_workflow(notes="...", diagnosis="...")`}
 				<figure class="chat-shot">
 					<img
 						src="/zipperchat-screenshot.png"
-						alt="ZipperChat showing a diagnosis workflow execution as a live message sequence chart"
+						alt="ZipperChat showing a write_tweet workflow execution as a live message sequence chart"
 					/>
 				</figure>
 				<h2>Learn more</h2>
