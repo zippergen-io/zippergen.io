@@ -1,9 +1,12 @@
 ---
+import { Code } from 'astro:components';
+
 interface Props {
   code: string;
+  lang?: string;
 }
 
-const { code } = Astro.props;
+const { code, lang = 'python' } = Astro.props;
 ---
 
 <figure class="code-snippet">
@@ -18,7 +21,7 @@ const { code } = Astro.props;
       <polyline points="20 6 9 17 4 12"/>
     </svg>
   </button>
-  <pre><code>{code}</code></pre>
+  <Code code={code} lang={lang} theme="github-light" />
 </figure>
 
 <script is:inline>
@@ -44,18 +47,11 @@ const { code } = Astro.props;
     margin: 0;
   }
 
-  pre {
-    background: rgb(var(--gray-light));
+  :global(pre) {
     padding: 1em 1.2em;
     border-radius: 8px;
     overflow-x: auto;
-  }
-
-  pre > code {
-    all: unset;
-    font-family: monospace;
     font-size: 0.85em;
-    white-space: pre;
   }
 
   .copy-btn {

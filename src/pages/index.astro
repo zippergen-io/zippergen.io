@@ -14,9 +14,7 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 	<body>
 		<Header />
 		<main>
-			<h1>
-				<span class="zip-icon"><img src="/AgentZipper.svg" alt="Zip" /></span> Multi-agent coordination that can't deadlock
-			</h1>
+			<h1>Deadlock-free LLM agent coordination</h1>
 			<p>
 				<strong>ZipperGen</strong> is a Python DSL and runtime for structured multi-agent LLM
 				coordination. You write a single global protocol describing what messages flow between which
@@ -25,6 +23,7 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 			</p>
 			<h2>Quick start</h2>
 			<CodeSnippet
+				lang="bash"
 				code={`git clone https://github.com/zippergen-io/zippergen.git
 cd zippergen
 pip install -e .`}
@@ -85,9 +84,11 @@ print(result)`}
 				Set your API key, pass a provider name, and run:
 			</p>
 			<CodeSnippet
-				code={`export OPENAI_API_KEY=...
-
-my_workflow.configure(llms="openai", ui=True)
+				lang="bash"
+				code={`export OPENAI_API_KEY=...`}
+			/>
+			<CodeSnippet
+				code={`my_workflow.configure(llms="openai", ui=True)
 result = my_workflow(notes="...", diagnosis="...")`}
 			/>
 			<p>
@@ -123,21 +124,8 @@ result = my_workflow(notes="...", diagnosis="...")`}
 </html>
 
 <style>
-	h1 {
-		display: flex;
-		align-items: center;
-		gap: 0.3em;
-	}
 	h2 {
 		margin-top: 0.75em;
-	}
-	.zip-icon img {
-		height: 1.15em;
-		width: auto;
-		display: block;
-		max-width: none;
-		position: relative;
-		top: -6px;
 	}
 	.chat-shot {
 		margin: 1rem 0 0.5rem;
