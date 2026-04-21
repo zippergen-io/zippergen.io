@@ -19,7 +19,8 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 				<strong>ZipperGen</strong> is a Python DSL and runtime for structured multi-agent LLM
 				coordination. You write a single global protocol describing what messages flow between which
 				agents and who owns each decision. ZipperGen projects it onto each agent and runs them
-				concurrently — with deadlock-freedom guaranteed by construction.
+				concurrently, with deadlock-freedom guaranteed by construction. The guarantees are formally
+				established in our <a href="https://arxiv.org/abs/2604.17612">paper</a>.
 			</p>
 			<h2>Quick start</h2>
 			<CodeSnippet
@@ -32,7 +33,7 @@ pip install -e .`}
 			<h2>Hello, World!</h2>
 			<p>
 				Three agents collaborate: <code>Writer</code> drafts a tweet, <code>Editor</code> decides
-				whether it's good enough, and ZipperGen handles the coordination. No API key needed — the
+				whether it's good enough, and ZipperGen handles the coordination. No API key needed; the
 				built-in mock backend runs instantly.
 			</p>
 			<CodeSnippet
@@ -74,7 +75,7 @@ def write_tweet(topic: str @ User) -> str:
         Writer(tweet) >> User(tweet)
     return tweet @ User
 
-# No API key needed — runs with the built-in mock backend.
+# No API key needed; runs with the built-in mock backend.
 # Switch to a real LLM: write_tweet.configure(llms="openai")
 result = write_tweet(topic="a git commit message that tells the truth")
 print(result)`}
@@ -109,10 +110,23 @@ result = my_workflow(notes="...", diagnosis="...")`}
 						alt="ZipperChat showing a write_tweet workflow execution as a live message sequence chart"
 					/>
 				</figure>
-				<h2>Learn more</h2>
+				<h2>Formal foundation</h2>
+			<p>
+				ZipperGen is grounded in the theory of Message Sequence Charts. The projection from a
+				global protocol to per-agent local programs is syntax-directed, and deadlock-freedom follows
+				by structural induction; no runtime checking required. The formal proofs are in our paper:
+			</p>
+			<p>
+				Bollig, Függer, Nowak. <em>Provable Coordination for LLM Agents via Message Sequence Charts.</em>
+				<a href="https://arxiv.org/abs/2604.17612">arXiv:2604.17612 [cs.PL]</a>
+			</p>
+			<h2>Learn more</h2>
 			<ul>
 				<li>
-					<a href="https://github.com/zippergen-io/zippergen">GitHub — zippergen-io/zippergen</a>
+					<a href="https://arxiv.org/abs/2604.17612">Paper: Provable Coordination for LLM Agents via Message Sequence Charts</a>
+				</li>
+				<li>
+					<a href="https://github.com/zippergen-io/zippergen">GitHub: zippergen-io/zippergen</a>
 				</li>
 				<li>
 					<a href="/blog">About</a>
