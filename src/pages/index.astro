@@ -15,6 +15,10 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 		<Header />
 		<main>
 			<h1>Deadlock-free LLM agent coordination</h1>
+			<p class="lean-badges">
+				<a href="https://github.com/zippergen-io/paper-isola/tree/main/Lean"><img src="/lean-formalized.svg" alt="Lean formalized" height="34" /></a>
+				<a href="https://github.com/zippergen-io/paper-isola/tree/main/Lean"><img src="/lean.svg" alt="Lean verified" height="34" /></a>
+			</p>
 			<p>
 				<strong>ZipperGen</strong> is a Python DSL and runtime for structured multi-agent LLM
 				coordination. You write a single global protocol describing what messages flow between which
@@ -121,11 +125,6 @@ result = my_workflow(notes="...", diagnosis="...")`}
 				Bollig, Függer, Nowak. <em>Provable Coordination for LLM Agents via Message Sequence Charts.</em>
 				<a href="https://arxiv.org/abs/2604.17612">arXiv:2604.17612 [cs.PL]</a>
 			</p>
-			<p>
-				<a href="https://github.com/zippergen-io/paper-isola/tree/main/Lean">
-					<img src="/lean.svg" alt="Lean verified" height="34" style="margin-right:8px" /><img src="/lean-formalized.svg" alt="Lean formalized" height="34" />
-				</a>
-			</p>
 			<h2>Learn more</h2>
 			<ul>
 				<li>
@@ -157,5 +156,11 @@ result = my_workflow(notes="...", diagnosis="...")`}
 		border-radius: 14px;
 		border: 1px solid rgba(var(--gray), 0.18);
 		box-shadow: 0 18px 40px rgba(19, 31, 45, 0.08);
+	}
+	.lean-badges {
+		display: flex;
+		gap: 10px;
+		align-items: center;
+		margin: 0.5rem 0 1.25rem;
 	}
 	</style>
