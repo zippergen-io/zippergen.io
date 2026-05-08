@@ -13,154 +13,359 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 	</head>
 	<body>
 		<Header />
-		<main>
-			<h1>Deadlock-free LLM agent coordination</h1>
-			<p class="lean-badges">
-				<a href="https://github.com/zippergen-io/paper-isola/tree/main/Lean"><img src="/lean-formalized.svg" alt="Lean formalized" height="34" /></a>
-				<a href="https://github.com/zippergen-io/paper-isola/tree/main/Lean"><img src="/lean.svg" alt="Lean verified" height="34" /></a>
-			</p>
-			<p>
-				<strong>ZipperGen</strong> is a Python DSL and runtime for structured multi-agent LLM
-				coordination. You write a single global protocol describing what messages flow between which
-				agents and who owns each decision. ZipperGen projects it onto each agent and runs them
-				concurrently, with deadlock-freedom guaranteed by construction. The guarantees are formally
-				established in our <a href="https://arxiv.org/abs/2604.17612">paper</a>.
-			</p>
-			<h2>Quick start</h2>
-			<CodeSnippet
-				lang="bash"
-				code={`git clone https://github.com/zippergen-io/zippergen.git
-cd zippergen
-pip install -e .`}
-			/>
-			<p>Python 3.11 or later required.</p>
-			<h2>Hello, World!</h2>
-			<p>
-				Three agents collaborate: <code>Writer</code> drafts a tweet, <code>Editor</code> decides
-				whether it's good enough, and ZipperGen handles the coordination. No API key needed; the
-				built-in mock backend runs instantly.
-			</p>
-			<CodeSnippet
-				code={`from zippergen.syntax import Lifeline, Var
-from zippergen.actions import llm
-from zippergen.builder import workflow
+		<main class="landing">
+			<section class="hero">
+				<p class="eyebrow">Global protocols for multi-agent LLM systems</p>
+				<h1>Deadlock-free agent workflows, written once.</h1>
+				<p class="hero-copy">
+					ZipperGen is a Python DSL and runtime for structured multi-agent LLM coordination.
+					Write one global protocol describing messages, actions, and decisions; ZipperGen
+					projects it onto each agent and runs the result concurrently.
+				</p>
+				<div class="hero-actions">
+					<a class="button primary" href="https://github.com/zippergen-io/zippergen">View on GitHub</a>
+					<a class="button secondary" href="https://arxiv.org/abs/2604.17612">Read the paper</a>
+					<a href="https://github.com/zippergen-io/paper-isola/tree/main/Lean">
+						<img src="/lean-formalized.svg" alt="Lean formalized" height="34" />
+					</a>
+					<a href="https://github.com/zippergen-io/paper-isola/tree/main/Lean">
+						<img src="/lean.svg" alt="Lean verified" height="34" />
+					</a>
+				</div>
+				<p class="trust-note">Core projection theorems machine-checked in Lean 4.</p>
+				<figure class="hero-shot">
+					<img
+						src="/zipperchat-screenshot.png"
+						alt="ZipperChat showing a workflow execution as a live message sequence chart"
+					/>
+				</figure>
+			</section>
 
-User   = Lifeline("User")
-Writer = Lifeline("Writer")
-Editor = Lifeline("Editor")
+			<section class="feature-grid" aria-label="Core properties">
+				<article>
+					<h2>Global first</h2>
+					<p>Write the coordination once as a protocol instead of scattering it across agent prompts and callbacks.</p>
+				</article>
+				<article>
+					<h2>Projected locally</h2>
+					<p>Each lifeline receives the local program it needs: sends, receives, owned decisions, and tool calls.</p>
+				</article>
+				<article>
+					<h2>Deadlock-free</h2>
+					<p>If the workflow compiles, the coordination layer is structurally deadlock-free by construction.</p>
+				</article>
+			</section>
 
-topic    = Var("topic",    str)
-tweet    = Var("tweet",    str)
-approved = Var("approved", bool)
-
-@llm(system="Write a one-sentence tweet about the topic.",
-     user="{topic}", parse="text", outputs=(("tweet", str),))
-def draft(topic: str) -> None: ...
-
-@llm(system="Is this tweet engaging, original, and under 180 chars? Reply true or false.",
-     user="{tweet}", parse="bool", outputs=(("approved", bool),))
-def approve(tweet: str) -> None: ...
-
-@llm(system="Improve this tweet: shorter and punchier.",
-     user="{tweet}", parse="text", outputs=(("tweet", str),))
-def revise(tweet: str) -> None: ...
-
-@workflow
+			<section class="split-section">
+				<div>
+					<p class="section-label">Tiny workflow</p>
+					<h2>Branching has an owner.</h2>
+					<p>
+						The annotation <code>@ Editor</code> says that Editor owns the decision. ZipperGen
+						generates the control communication needed by the other lifelines.
+					</p>
+				</div>
+				<CodeSnippet
+					code={`@workflow
 def write_tweet(topic: str @ User) -> str:
     User(topic) >> Writer(topic)
     Writer: tweet = draft(topic)
     Writer(tweet) >> Editor(tweet)
     Editor: approved = approve(tweet)
+
     if approved @ Editor:
         Editor(tweet) >> User(tweet)
     else:
         Editor(tweet) >> Writer(tweet)
         Writer: tweet = revise(tweet)
         Writer(tweet) >> User(tweet)
-    return tweet @ User
 
-# No API key needed; runs with the built-in mock backend.
-# Switch to a real LLM: write_tweet.configure(llms="openai")
-result = write_tweet(topic="a git commit message that tells the truth")
-print(result)`}
-			/>
-			<h2>Using real LLMs</h2>
-			<p>
-				Set your API key, pass a provider name, and run:
-			</p>
-			<CodeSnippet
-				lang="bash"
-				code={`export OPENAI_API_KEY=...`}
-			/>
-			<CodeSnippet
-				code={`my_workflow.configure(llms="openai", ui=True)
-result = my_workflow(notes="...", diagnosis="...")`}
-			/>
-			<p>
-				Built-in providers: <code>openai</code>, <code>mistral</code>, <code>claude</code>.
-				Different agents can use different providers:
-			</p>
-			<CodeSnippet
-				code={`my_workflow.configure(llms={"LLM1": "mistral", "LLM2": "openai"})`}
-			/>
-				<h2>ZipperChat</h2>
-				<p>
-					Pass <code>ui=True</code> to open a live message-sequence-chart in your browser as the
-					agents run. Watch who sends what, who is thinking, and where the workflow currently is.
-				</p>
-				<figure class="chat-shot">
-					<img
-						src="/zipperchat-screenshot.png"
-						alt="ZipperChat showing a write_tweet workflow execution as a live message sequence chart"
+    return tweet @ User`}
+				/>
+			</section>
+
+			<section class="bands">
+				<div>
+					<h2>Causal runtime guards</h2>
+					<p>
+						When locally received data can be stale, guards can read the latest causally visible
+						state instead of a sequential log. Vector clocks and message-carried views make the
+						guard result depend on the asynchronous communication structure.
+					</p>
+					<CodeSnippet
+						code={`latest_device_on = Y[Device](
+    atom(lambda env: env.get("on", False), src="on")
+)
+
+if latest_device_on @ Indicator:
+    ...`}
 					/>
-				</figure>
-				<h2>Formal foundation</h2>
-			<p>
-				ZipperGen is grounded in the theory of Message Sequence Charts. The projection from a
-				global protocol to per-agent local programs is syntax-directed, and deadlock-freedom follows
-				by structural induction; no runtime checking required. The core theorems have been
-				machine-checked in Lean 4:
-			</p>
-			<p>
-				Bollig, Függer, Nowak. <em>Provable Coordination for LLM Agents via Message Sequence Charts.</em>
-				<a href="https://arxiv.org/abs/2604.17612">arXiv:2604.17612 [cs.PL]</a>
-			</p>
-			<h2>Learn more</h2>
-			<ul>
-				<li>
-					<a href="https://arxiv.org/abs/2604.17612">Paper: Provable Coordination for LLM Agents via Message Sequence Charts</a>
-				</li>
-				<li>
-					<a href="https://github.com/zippergen-io/zippergen">GitHub: zippergen-io/zippergen</a>
-				</li>
-				<li>
-					<a href="/blog">About</a>
-				</li>
-			</ul>
+				</div>
+				<div>
+					<h2>Unordered receives</h2>
+					<p>
+						Co-regions let a receiver accept independent messages in whichever order they arrive,
+						while preserving FIFO order on each channel.
+					</p>
+					<CodeSnippet
+						code={`with coregion:
+    Analyst_A(a) >> Collector(a_report)
+    Analyst_B(b) >> Collector(b_report)`}
+					/>
+				</div>
+			</section>
+
+			<section class="quick-start">
+				<div>
+					<p class="section-label">Try it locally</p>
+					<h2>No service required for the first examples.</h2>
+					<p>
+						The built-in mock backend returns placeholder model outputs, so examples can be run
+						without API keys. Switch to OpenAI, Mistral, or Claude with one configuration line
+						when you want real model calls.
+					</p>
+				</div>
+				<CodeSnippet
+					lang="bash"
+					code={`git clone https://github.com/zippergen-io/zippergen.git
+cd zippergen
+pip install -e .
+
+python examples/coregion.py
+python examples/cpl_test.py
+python examples/write_tweet.py`}
+				/>
+			</section>
+
+			<section class="formal-section">
+				<p class="section-label">Formal foundation</p>
+				<h2>Based on Message Sequence Charts.</h2>
+				<p>
+					The projection from a global protocol to per-agent local programs is syntax-directed,
+					and deadlock-freedom follows by structural induction; no runtime checking required.
+					The core theorems are in the paper and machine-checked in Lean 4.
+				</p>
+				<p>
+					Bollig, Függer, Nowak. <em>Provable Coordination for LLM Agents via Message Sequence Charts.</em>
+					<a href="https://arxiv.org/abs/2604.17612">arXiv:2604.17612 [cs.PL]</a>
+				</p>
+			</section>
+
+			<section class="cta-section">
+				<h2>Build inspectable agent workflows.</h2>
+				<p>
+					Start from the examples, inspect the generated message sequence chart, and decide whether
+					global protocols fit your agent system.
+				</p>
+				<div class="hero-actions">
+					<a class="button primary" href="https://github.com/zippergen-io/zippergen">Get the code</a>
+					<a class="button secondary" href="/about">About the project</a>
+				</div>
+			</section>
 		</main>
 		<Footer />
 	</body>
 </html>
 
 <style>
-	h2 {
-		margin-top: 0.75em;
+	.landing {
+		width: 100%;
+		max-width: none;
+		padding: 0;
 	}
-	.chat-shot {
-		margin: 1rem 0 0.5rem;
+
+	.landing :global(pre) {
+		margin: 0;
 	}
-	.chat-shot img {
+
+	.hero,
+	.feature-grid,
+	.split-section,
+	.bands,
+	.quick-start,
+	.formal-section,
+	.cta-section {
+		width: min(1120px, calc(100% - 2rem));
+		margin: 0 auto;
+	}
+
+	.hero {
+		padding: 5.5rem 0 3rem;
+	}
+
+	.eyebrow,
+	.section-label {
+		margin: 0 0 0.75rem;
+		color: #9a6700;
+		font-size: 0.82rem;
+		font-weight: 700;
+		letter-spacing: 0;
+		text-transform: uppercase;
+	}
+
+	.hero h1 {
+		max-width: 850px;
+		margin: 0;
+		font-size: clamp(2.15rem, 5vw, 4.25rem);
+		line-height: 1.02;
+	}
+
+	.hero-copy {
+		max-width: 760px;
+		margin: 1.35rem 0 0;
+		color: rgb(var(--gray-dark));
+		font-size: 1.16rem;
+		line-height: 1.65;
+	}
+
+	.hero-actions {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+		align-items: center;
+		margin-top: 1.6rem;
+	}
+
+	.button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 2.75rem;
+		padding: 0 1.1rem;
+		border-radius: 6px;
+		font-weight: 600;
+		text-decoration: none;
+	}
+
+	.button.primary {
+		background: rgb(var(--black));
+		color: white;
+	}
+
+	.button.secondary {
+		border: 1px solid rgba(var(--gray), 0.28);
+		background: white;
+		color: rgb(var(--black));
+	}
+
+	.hero-actions img {
+		display: block;
+		border-radius: 0;
+	}
+
+	.trust-note {
+		margin: 0.75rem 0 0;
+		color: rgb(var(--gray));
+		font-size: 0.9rem;
+	}
+
+	.hero-shot {
+		margin: 3rem 0 0;
+	}
+
+	.hero-shot img {
 		display: block;
 		width: 100%;
-		max-width: 980px;
-		border-radius: 14px;
+		border: 1px solid rgba(var(--gray), 0.2);
+		border-radius: 8px;
+		box-shadow: 0 22px 55px rgba(19, 31, 45, 0.12);
+	}
+
+	.feature-grid {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 1rem;
+		padding: 1rem 0 3rem;
+	}
+
+	.feature-grid article {
 		border: 1px solid rgba(var(--gray), 0.18);
-		box-shadow: 0 18px 40px rgba(19, 31, 45, 0.08);
+		border-radius: 8px;
+		background: white;
+		padding: 1.15rem;
 	}
-	.lean-badges {
-		display: flex;
-		gap: 10px;
-		align-items: center;
-		margin: 0.5rem 0 1.25rem;
+
+	.feature-grid h2,
+	.bands h2,
+	.quick-start h2,
+	.formal-section h2,
+	.cta-section h2,
+	.split-section h2 {
+		font-size: clamp(1.7rem, 4vw, 2.6rem);
 	}
-	</style>
+
+	.feature-grid h2 {
+		margin-bottom: 0.4rem;
+		font-size: 1.25rem;
+	}
+
+	.feature-grid p,
+	.bands p,
+	.quick-start p,
+	.formal-section p,
+	.cta-section p,
+	.split-section p {
+		color: rgb(var(--gray-dark));
+	}
+
+	.split-section,
+	.quick-start {
+		display: grid;
+		grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
+		gap: 2rem;
+		align-items: start;
+		padding: 4rem 0;
+	}
+
+	.bands {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 1.25rem;
+		padding: 4rem 0;
+	}
+
+	.bands > div {
+		border-radius: 8px;
+		background: #f8fafc;
+		padding: 1.35rem;
+	}
+
+	.bands .code-snippet {
+		margin-top: 1rem;
+	}
+
+	.formal-section,
+	.cta-section {
+		padding: 4rem 0;
+	}
+
+	.formal-section p,
+	.cta-section p {
+		max-width: 760px;
+	}
+
+	.cta-section {
+		padding-bottom: 5rem;
+	}
+
+	@media (max-width: 840px) {
+		.hero {
+			padding-top: 3.25rem;
+		}
+
+		.feature-grid,
+		.split-section,
+		.bands,
+		.quick-start {
+			grid-template-columns: 1fr;
+		}
+
+		.split-section,
+		.bands,
+		.quick-start,
+		.formal-section,
+		.cta-section {
+			padding: 2.75rem 0;
+		}
+	}
+</style>
