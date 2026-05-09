@@ -1,11 +1,14 @@
 ---
-import { SITE_TITLE } from '../consts';
 import HeaderLink from './HeaderLink.astro';
 ---
 
 <header>
 	<nav>
-		<h2><a href="/">Zipper<span class="gen">Gen</span></a></h2>
+		<h2 class="site-brand">
+			<a href="/" aria-label="ZipperGen home">
+				<img src="/zippergen-lockup-ink.svg" alt="ZipperGen" />
+			</a>
+		</h2>
 		<div class="internal-links">
 			<HeaderLink href="/">Home</HeaderLink>
 			<HeaderLink href="/about">About</HeaderLink>
@@ -32,14 +35,22 @@ import HeaderLink from './HeaderLink.astro';
 	}
 	h2 {
 		margin: 0;
-		font-size: 1em;
 	}
 	h2 a,
 	h2 a.active {
 		text-decoration: none;
 	}
-	.gen {
-		color: #C8860A;
+	.site-brand a {
+		display: flex;
+		align-items: center;
+		padding: 0.8rem 0.5rem;
+		border-bottom: 0;
+	}
+	.site-brand img {
+		display: block;
+		width: 152px;
+		height: auto;
+		border-radius: 0;
 	}
 	nav {
 		display: flex;
@@ -55,6 +66,9 @@ import HeaderLink from './HeaderLink.astro';
 	nav a.active {
 		text-decoration: none;
 		border-bottom-color: var(--accent);
+	}
+	.site-brand a.active {
+		border-bottom-color: transparent;
 	}
 	.social-links,
 	.social-links a {
