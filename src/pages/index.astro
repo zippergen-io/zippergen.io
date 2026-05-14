@@ -93,24 +93,29 @@ def write_tweet(topic: str @ User) -> str:
 						guard result depend on the asynchronous communication structure.
 					</p>
 					<CodeSnippet
-						code={`latest_device_on = Y[Device](
-    atom(lambda env: env.get("on", False), src="on")
-)
+						code={`latest_device_on = At[Device].on == True
 
 if latest_device_on @ Indicator:
     ...`}
 					/>
 				</div>
 				<div>
-					<h2>Unordered receives</h2>
+					<h2>Parallel regions</h2>
 					<p>
-						Co-regions let a receiver accept independent messages in whichever order they arrive,
-						while preserving FIFO order on each channel.
+						Parallel regions run several sub-programs concurrently. Shared lifelines interleave
+						their branch-local programs, and branch-specific channels preserve FIFO order where it matters.
 					</p>
 					<CodeSnippet
-						code={`with coregion:
-    Analyst_A(a) >> Collector(a_report)
-    Analyst_B(b) >> Collector(b_report)`}
+						code={`with parallel:
+    with branch:
+        Orchestrator(candidate) >> TestRunner(candidate)
+        TestRunner: (test_status,) = run_tests(candidate)
+        TestRunner(test_status) >> Committer(test_status)
+
+    with branch:
+        Orchestrator(candidate) >> Security(candidate)
+        Security: (security_status,) = scan_security(candidate)
+        Security(security_status) >> Committer(security_status)`}
 					/>
 				</div>
 			</section>
@@ -132,7 +137,7 @@ if latest_device_on @ Indicator:
 cd zippergen
 pip install -e .
 
-python examples/coregion.py
+python examples/parallel.py
 python examples/cpl_test.py
 python examples/write_tweet.py`}
 				/>
