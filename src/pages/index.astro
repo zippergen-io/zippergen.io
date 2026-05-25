@@ -86,8 +86,8 @@ def write_tweet(topic: str @ User) -> str:
 				/>
 			</section>
 
-			<section class="command-center-section">
-				<div class="command-center-header">
+			<section class="split-section">
+				<div>
 					<p class="section-label">Larger example</p>
 					<h2>Two event loops, shared agents, no routing code.</h2>
 					<p>
@@ -389,29 +389,6 @@ python examples/parallel.py              # fan-out / fan-in across branches`}
 		padding: 4rem 0 2rem;
 	}
 
-	.command-center-section {
-		display: grid;
-		grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-		gap: 2rem;
-		align-items: start;
-		padding: 4rem 0;
-	}
-
-	.command-center-section h2 {
-		font-size: clamp(1.7rem, 4vw, 2.6rem);
-	}
-
-	.command-center-section p {
-		color: rgb(var(--gray-dark));
-	}
-
-	.command-center-section .code-snippet + p {
-		margin-top: 0.75rem;
-	}
-
-	.command-center-header :global(.code-snippet) {
-		margin-top: 0.85rem;
-	}
 
 	.bands {
 		display: grid;
@@ -451,14 +428,12 @@ python examples/parallel.py              # fan-out / fan-in across branches`}
 
 		.feature-grid,
 		.split-section,
-		.command-center-section,
 		.bands,
 		.quick-start {
 			grid-template-columns: 1fr;
 		}
 
 		.split-section,
-		.command-center-section,
 		.bands,
 		.quick-start,
 		.formal-section,
