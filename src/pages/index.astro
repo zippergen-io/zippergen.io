@@ -37,8 +37,8 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 				<p class="trust-note">Core projection theorems machine-checked in Lean 4.</p>
 				<figure class="hero-shot">
 					<img
-						src="/zipperchat-screenshot.png"
-						alt="ZipperChat showing a live per-lifeline event feed for a workflow execution"
+						src="/zipperchat-msc.png"
+						alt="ZipperChat MSC view showing lifeline columns with action, message, and decision cards"
 					/>
 				</figure>
 			</section>
@@ -56,6 +56,16 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 					<h2>Deadlock-free</h2>
 					<p>If the workflow compiles, the coordination layer is structurally deadlock-free by construction.</p>
 				</article>
+			</section>
+
+			<section class="dialog-shot">
+				<figure>
+					<img
+						src="/zipperchat-dialog.png"
+						alt="ZipperChat detail view with email context on the left and a draft reply form on the right"
+					/>
+					<figcaption>Clicking a human action opens a detail view. You can review the context and respond.</figcaption>
+				</figure>
 			</section>
 
 			<section class="split-section">
@@ -341,6 +351,31 @@ python examples/parallel.py              # fan-out / fan-in across branches`}
 		border: 1px solid rgba(var(--gray), 0.2);
 		border-radius: 8px;
 		box-shadow: 0 22px 55px rgba(19, 31, 45, 0.12);
+	}
+
+	.dialog-shot {
+		width: min(1120px, calc(100% - 2rem));
+		margin: 0 auto;
+		padding: 3rem 0 0;
+	}
+
+	.dialog-shot figure {
+		margin: 0;
+	}
+
+	.dialog-shot img {
+		display: block;
+		width: 100%;
+		border: 1px solid rgba(var(--gray), 0.2);
+		border-radius: 8px;
+		box-shadow: 0 22px 55px rgba(19, 31, 45, 0.12);
+	}
+
+	.dialog-shot figcaption {
+		margin-top: 0.75rem;
+		font-size: 0.9rem;
+		color: rgb(var(--gray));
+		text-align: center;
 	}
 
 	.feature-grid {
