@@ -21,7 +21,7 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 					Building multi-agent systems is hard because coordination logic ends up scattered across
 					agent prompts, callbacks, and state machines no one fully understands. ZipperGen gives
 					you a single global protocol: who sends what to whom, who runs which LLM, and who owns
-					each decision — including tools, humans, and external services. ZipperGen projects it
+					each decision, including tools, humans, and external services. ZipperGen projects it
 					to each agent automatically and runs it concurrently.
 				</p>
 				<div class="hero-actions">
@@ -200,7 +200,7 @@ if latest_device_on @ Indicator:
 						The built-in mock backend returns placeholder model outputs, so examples can be run
 						without API keys. Switch to OpenAI, Mistral, or Claude with one configuration line
 						when you want real model calls. ZipperGen can also use OpenAI-compatible local model
-						servers such as vLLM; the repository includes a small local Qwen/vLLM example.
+						servers such as vLLM. The repository includes a small local Qwen/vLLM example.
 					</p>
 				</div>
 				<CodeSnippet
@@ -220,7 +220,7 @@ python examples/parallel.py              # fan-out / fan-in across branches`}
 				<h2>Based on Message Sequence Charts.</h2>
 				<p>
 					The projection from a global protocol to per-agent local programs is syntax-directed,
-					and deadlock-freedom follows by structural induction; no runtime checking required.
+					and deadlock-freedom follows by structural induction, with no runtime checking required.
 					The core theorems are in the paper and machine-checked in Lean 4.
 				</p>
 				<p>
