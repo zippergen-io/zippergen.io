@@ -15,8 +15,8 @@
   --text-soft:       #3a3a5a;
   --text-mute:       #6e6e92;
   --text-faint:      #a8a8c4;
-  --accent:          #2148FF;
-  --accent-bg:       #e8edff;
+  --accent:          #1d4ed8;
+  --accent-bg:       #dde6fb;
   --accent-attn:     #E94F2E;
   --accent-attn-bg:  #fde8e3;
   --btn-bg:          #14141A;
@@ -32,8 +32,9 @@
   --col-recv-fill:  #ddf3eb;
   --col-recv-bdr:   #a8d5c4;
   --col-sel:        #2f9168;
-  --rule:         #e7ebee;
-  --rule-hdr:     #dde2e6;
+  --rule:         #e0e4e8;
+  --rule-hdr:     #e0e4e8;
+  --inbox-bg:     #eef1f4;
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; overflow: hidden; }
@@ -57,21 +58,55 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); font
 
 /* ── Inbox panel ─────────────────────────────────────────────────────────── */
 #inbox-panel {
-  flex: 0 0 220px; display: flex; flex-direction: column;
+  flex: 0 0 250px; display: flex; flex-direction: column;
   border-right: 1px solid var(--rule); overflow: hidden;
-  position: relative; z-index: 10; background: var(--bg);
+  position: relative; z-index: 10; background: var(--inbox-bg);
+  transition: flex-basis 0.22s ease;
 }
+#inbox-panel.inbox-collapsed { flex-basis: 52px; }
+#inbox-panel.inbox-collapsed .inbox-hdr,
+#inbox-panel.inbox-collapsed #inbox-list { display: none; }
+.inbox-strip {
+  display: none; flex-direction: column; align-items: center;
+  padding: 8px 0 0; gap: 8px; flex: 1;
+}
+#inbox-panel.inbox-collapsed .inbox-strip { display: flex; }
+.inbox-strip-btn {
+  background: none; border: none; cursor: pointer; border-radius: 4px;
+  font-size: 15px; color: var(--text-mute); padding: 3px 5px; line-height: 1;
+  transition: color .12s;
+}
+.inbox-strip-btn:hover { color: var(--text); background: rgba(0,0,0,.06); }
+.inbox-strip-icon { color: var(--text-mute); display: block; }
+.inbox-strip-count {
+  min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: 99px; background: var(--accent-attn);
+  color: #fff; font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.inbox-strip-count:empty { display: none; }
 .inbox-hdr {
-  display: flex; align-items: baseline; gap: 6px;
-  padding: 14px 25px 10px; font-size: 13px; font-weight: 600;
+  display: flex; align-items: center;
+  padding: 10px 12px 10px 0; font-size: 13px; font-weight: 600;
   color: var(--text); border-bottom: 1px solid var(--rule-hdr); flex-shrink: 0;
   letter-spacing: 0.02em;
 }
+.inbox-hdr-gutter {
+  flex: 0 0 24px; display: flex; align-items: center; justify-content: center;
+}
+.inbox-hdr-title { display: flex; align-items: baseline; gap: 6px; flex: 1; min-width: 0; }
+#inbox-fold {
+  width: 22px; height: 22px;
+  background: none; border: none; cursor: pointer; border-radius: 4px;
+  color: var(--text-mute); padding: 0;
+  display: flex; align-items: center; justify-content: center; transition: color .12s;
+}
+#inbox-fold:hover { color: var(--text); background: rgba(0,0,0,.06); }
 .inbox-badge { font-size: 11px; font-weight: 700; color: var(--accent-attn); }
 #inbox-list { flex: 1; overflow-y: auto; }
-.inbox-empty { padding: 24px 25px; font-size: 13px; color: var(--text-faint); }
+.inbox-empty { padding: 24px 12px 24px 24px; font-size: 13px; color: var(--text-faint); }
 .inbox-card {
-  padding: 9px 25px; cursor: pointer; user-select: none;
+  padding: 9px 12px 9px 24px; cursor: pointer; user-select: none;
   border-bottom: 1px solid var(--rule); transition: background .1s;
 }
 .inbox-card:hover:not(.inbox-sel) { background: rgba(0,0,0,.03); }
@@ -81,9 +116,9 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); font
   font-size: 13px; font-weight: 500; color: var(--text);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;
 }
-.inbox-card.inbox-sel .inbox-card-name { color: var(--accent); }
+.inbox-card.inbox-sel .inbox-card-name { color: var(--text); }
 .inbox-card-sub { font-size: 11px; color: var(--text-mute); margin-top: 3px; }
-.inbox-card.inbox-sel .inbox-card-sub { color: var(--accent); opacity: .7; }
+.inbox-card.inbox-sel .inbox-card-sub { color: var(--text-mute); }
 .sg-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 .dot-done    { background: transparent; }
 .dot-running { background: transparent; }
@@ -154,7 +189,7 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); font
 }
 #detail-topbar {
   display: flex; align-items: center; justify-content: flex-end;
-  padding: 14px 24px 10px; border-bottom: 1px solid var(--rule-hdr); flex-shrink: 0;
+  padding: 14px 56px 10px; border-bottom: 1px solid var(--rule-hdr); flex-shrink: 0;
 }
 #detail-close {
   background: none; border: none; cursor: pointer;
@@ -170,7 +205,7 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); font
   min-height: 300px; font-size: 14px; color: var(--text-faint);
 }
 .ins-meta {
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
   margin-bottom: 12px; font-size: 14px; color: var(--text-mute);
 }
 .ins-meta-ll   { font-weight: 500; color: var(--lifeline-color); }
@@ -180,8 +215,9 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); font
 .ins-meta-kind { font-size: 12px; }
 .ins-meta-time { font-size: 12px; color: var(--text-faint); }
 .ins-meta-fn   { font-size: 12px; color: var(--text-faint); }
+.ins-await-row { margin: 0 0 8px; }
 .ins-meta-await {
-  margin-left: auto; font-family: var(--mono); font-size: 10px; font-weight: 600;
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
   letter-spacing: 0.07em; text-transform: uppercase;
   color: var(--accent-attn); background: var(--accent-attn-bg);
   border-radius: 3px; padding: 2px 7px;
@@ -251,7 +287,7 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); font
 }
 .btn-secondary:hover:not(:disabled) { border-color: rgba(20,18,12,0.3); color: var(--text); }
 .btn-secondary:disabled { opacity: .35; cursor: default; }
-.ins-hint { margin-left: auto; font-size: 12px; color: var(--text-faint); }
+.ins-hint { font-size: 12px; color: var(--text-faint); }
 .btn-choice {
   font-family: var(--sans); font-size: 14px; padding: 9px 16px; border-radius: 6px;
   border: 1px solid var(--rule); background: var(--panel); color: var(--text-soft);
@@ -344,9 +380,26 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); font
   </header>
   <div id="main">
     <div id="inbox-panel">
-      <div class="inbox-hdr">Inbox<span class="inbox-badge" id="inbox-badge"></span></div>
+      <div class="inbox-hdr">
+        <div class="inbox-hdr-gutter">
+          <button id="inbox-fold" aria-label="Collapse inbox">
+            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+        </div>
+        <span class="inbox-hdr-title">Inbox<span class="inbox-badge" id="inbox-badge"></span></span>
+      </div>
       <div id="inbox-list">
         <p class="inbox-empty">No actions yet&hellip;</p>
+      </div>
+      <div class="inbox-strip">
+        <button class="inbox-strip-btn" onclick="document.getElementById('inbox-fold').click()" aria-label="Expand inbox">
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+        <svg class="inbox-strip-icon" aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 12h-6l-2 3h-4l-2-3H2"/>
+          <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+        </svg>
+        <span class="inbox-strip-count" id="inbox-strip-count"></span>
       </div>
     </div>
     <div id="right-panel">
@@ -403,11 +456,27 @@ let _ctrlSeq          = 0;
 // ── DOM ──────────────────────────────────────────────────────────────────────
 const inboxList   = document.getElementById('inbox-list');
 const inboxBadge  = document.getElementById('inbox-badge');
+const inboxPanel  = document.getElementById('inbox-panel');
 const detailPanel = document.getElementById('detail-panel');
 const detailBody  = document.getElementById('detail-body');
 const colView     = document.getElementById('col-view');
 const arrowsGroup = document.getElementById('col-arrows-g');
 colView.addEventListener('scroll', function(){ if(showArrows) scheduleDrawArrows(); });
+
+// ── Inbox fold ────────────────────────────────────────────────────────────────
+const _FOLD_KEY = 'zc-inbox-collapsed';
+const _foldBtn  = document.getElementById('inbox-fold');
+function _applyFold(collapsed){
+  inboxPanel.classList.toggle('inbox-collapsed', collapsed);
+  _foldBtn.title = collapsed ? 'Expand inbox' : 'Collapse inbox';
+}
+_applyFold(localStorage.getItem(_FOLD_KEY) === '1');
+_foldBtn.onclick = function(){
+  const collapsed = !inboxPanel.classList.contains('inbox-collapsed');
+  _applyFold(collapsed);
+  localStorage.setItem(_FOLD_KEY, collapsed ? '1' : '0');
+};
+inboxPanel.addEventListener('transitionend', function(){ if(showArrows) scheduleDrawArrows(); });
 
 // ── Message arrows ────────────────────────────────────────────────────────────
 function scheduleDrawArrows(){
@@ -482,7 +551,9 @@ function updateInboxCard(key){
 }
 
 function updateInboxBadge(){
-  inboxBadge.textContent = pending > 0 ? pending : '';
+  const t = pending > 0 ? pending : '';
+  inboxBadge.textContent = t;
+  document.getElementById('inbox-strip-count').textContent = t;
 }
 
 // ── Detail panel ──────────────────────────────────────────────────────────────
@@ -502,6 +573,7 @@ function openDetail(key){
   const mp = msgCards[key];
   if(mp){ if(mp.send) mp.send.classList.add('col-sel'); if(mp.recv) mp.recv.classList.add('col-sel'); }
   if(decisionEls[key]) decisionEls[key].classList.add('col-dec-sel');
+  document.getElementById('btn-arrows').style.display = 'none';
   detailPanel.style.display = 'flex';
   renderInspector(key, detailBody, closeDetail);
 }
@@ -511,6 +583,7 @@ function closeDetail(){
   Object.keys(inboxCards).forEach(function(k){ inboxCards[k].classList.remove('inbox-sel'); });
   detailKey = null;
   detailPanel.style.display = 'none';
+  if(Object.keys(colEls).length) document.getElementById('btn-arrows').style.display = '';
   if(_cmdHandler){ document.removeEventListener('keydown',_cmdHandler); _cmdHandler=null; }
 }
 
@@ -525,7 +598,7 @@ function renderMsgDetail(a){
     +'<span class="ins-meta-ll">'+esc(a.to)+'</span>'
     +(a.channel?'<span class="ins-meta-dot">&middot;</span><span class="ins-meta-kind">'+esc(a.channel)+'</span>':'')
     +'</div>'
-    +'<div class="ins-title"><span class="ll-name">'+esc(a.from)+'</span> <span class="ins-arrow">→</span> <span class="ll-name">'+esc(a.to)+'</span></div>';
+    +'<div class="ins-title">'+esc(a.from)+' → '+esc(a.to)+'</div>';
   if(vars.length){
     vars.forEach(function([k,v]){
       h += '<div class="ins-section"><div class="ins-sec-label">'+esc(k)+'</div>'+ctxBox(v)+'</div>';
@@ -578,8 +651,8 @@ function renderInspector(overrideKey, targetEl, afterInput){
     +'<span class="ins-meta-kind">'+esc(kl)+'</span>'
     +(isHuman?'<span class="ins-meta-dot">&middot;</span><span class="ins-meta-fn">'+esc(a.name)+'</span>':'')
     +(a.time?'<span class="ins-meta-dot">&middot;</span><span class="ins-meta-time">'+esc(a.time)+'</span>':'')
-    +(hp?'<span class="ins-meta-await">AWAITING YOU</span>':'')
-    +'</div>';
+    +'</div>'
+    +(hp?'<div class="ins-await-row"><span class="ins-meta-await">AWAITING YOU</span></div>':'');
   if(showTitle) html += '<div class="ins-title">'+esc(title)+'</div>';
   if(hp)       html += renderPendingForm(req);
   else if(hd)  html += renderHumanDone(req);
@@ -656,7 +729,8 @@ function renderPendingForm(req){
         +'<div>'+renderEmailCtx(req.context)+'</div>'
         +'<div class="ins-split-work">'
         +'<div class="ea ea-write">'+instrHdr+'<textarea class="ea-ta">'+taVal+'</textarea></div>'
-        +actHtml+'</div></div>';
+        +'</div></div>'
+        +actHtml;
     } else {
       const taLabelCls = instruction ? 'ins-instr-label' : 'ins-sec-label';
       const taLabel = instruction||(req.prefill?'Edit or approve':'Input');
