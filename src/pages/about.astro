@@ -9,64 +9,61 @@ import Header from '../components/Header.astro';
 	<head>
 		<BaseHead
 			title="About ZipperGen"
-			description="About ZipperGen, a Python DSL for structured multi-agent LLM coordination."
+			description="A protocol-first approach to LLM agents. Why ZipperGen exists, its design principles, and its research background."
 		/>
 	</head>
 	<body>
 		<Header />
 		<main class="about-page">
-			<section class="about-hero">
-				<p class="eyebrow">About ZipperGen</p>
-				<h1>Global protocols for inspectable agent systems.</h1>
-				<p>
-					ZipperGen is a Python DSL and runtime for structured multi-agent LLM coordination,
-					based on the theory of Message Sequence Charts. You write one global protocol;
-					ZipperGen projects it onto each agent and runs the result concurrently.
+			<div class="about-wrap">
+				<h1>A protocol-first approach to LLM agents</h1>
+
+				<p class="intro">
+					ZipperGen is a Python DSL and runtime for structured multi-agent LLM systems.
+					It is based on a simple idea: instead of wiring agents together locally and hoping
+					the pieces interact correctly, write the global protocol first.
 				</p>
-			</section>
+				<p class="intro">
+					A protocol describes who talks to whom, which participant performs each action,
+					and who owns each decision. ZipperGen projects this protocol to local agents
+					and runs them concurrently.
+				</p>
 
-			<section class="about-grid">
-				<article>
-					<h2>The Idea</h2>
-					<p>
-						Multi-agent frameworks often assemble workflows from callbacks, tool calls, and
-						agent-local control flow. ZipperGen instead asks for a global protocol: who sends
-						what, who runs which action, and who owns each decision.
-					</p>
-					<p>
-						That global protocol is then projected to one local program per lifeline. The result
-						is executable, inspectable, and structurally deadlock-free for the coordination layer.
-					</p>
-				</article>
-
-				<article>
-					<h2>What You Get</h2>
-					<ul>
-						<li>A compact Python DSL for global coordination protocols</li>
-						<li>Automatic projection to per-agent local programs</li>
-						<li>Concurrent execution with FIFO message queues</li>
-						<li>Deadlock-freedom for the coordination layer, by construction</li>
-						<li>Human control points for approvals, reviews, corrections, and data entry</li>
-						<li>Causal runtime guards for stale-message scenarios</li>
-						<li>ZipperChat: a live message-sequence-chart viewer</li>
-					</ul>
-				</article>
-			</section>
-
-			<section class="about-paper">
-				<p class="eyebrow">Paper and Code</p>
-				<h2>Research-backed, implementation-first.</h2>
+				<h2>Motivation</h2>
 				<p>
-					The formal basis is described in
-					<a href="https://arxiv.org/abs/2604.17612"><em>Provable Coordination for LLM Agents via Message Sequence Charts</em></a>.
-					The repository contains the implementation, examples, tests, and links to the Lean
-					formalization.
+					LLM-agent systems often combine tool calls, callbacks, queues, retries, and human
+					approval steps. As these systems grow, the coordination logic can become difficult
+					to inspect and easy to break.
+				</p>
+				<p>
+					ZipperGen makes the coordination explicit. The global workflow is the source of
+					truth, and executions can be inspected as message sequence charts.
+				</p>
+
+				<h2>Design principles</h2>
+				<ul>
+					<li>Coordination should be written globally.</li>
+					<li>Local agent programs should be derived automatically.</li>
+					<li>Human approval and side effects should be explicit.</li>
+					<li>Executions should be inspectable.</li>
+					<li>The coordination layer should be deadlock-free by construction.</li>
+				</ul>
+
+				<h2>Research and implementation</h2>
+				<p>
+					ZipperGen builds on ideas from Message Sequence Charts and choreographic
+					programming. The implementation is available as an open-source Python project,
+					together with examples, tests, and links to the Lean formalization.
+				</p>
+				<p>
+					The goal is practical: make multi-agent LLM systems easier to program, run,
+					inspect, and audit.
 				</p>
 				<div class="actions">
 					<a class="button primary" href="https://github.com/zippergen-io/zippergen">GitHub repository</a>
 					<a class="button secondary" href="https://arxiv.org/abs/2604.17612">arXiv paper</a>
 				</div>
-			</section>
+			</div>
 		</main>
 		<Footer />
 	</body>
@@ -79,71 +76,48 @@ import Header from '../components/Header.astro';
 		padding: 0;
 	}
 
-	.about-hero,
-	.about-grid,
-	.about-paper {
-		width: min(1120px, calc(100% - 2rem));
+	.about-wrap {
+		width: min(760px, calc(100% - 2rem));
 		margin: 0 auto;
+		padding: 5rem 0 6rem;
 	}
 
-	.about-hero {
-		padding: 5rem 0 3rem;
+	h1 {
+		margin: 0 0 2rem;
+		font-size: clamp(2rem, 4vw, 3rem);
+		line-height: 1.1;
 	}
 
-	.eyebrow {
-		margin: 0 0 0.75rem;
-		color: var(--accent-dark);
-		font-size: 0.82rem;
-		font-weight: 700;
-		letter-spacing: 0;
-		text-transform: uppercase;
-	}
-
-	.about-hero h1 {
-		max-width: 820px;
-		margin: 0;
-		font-size: clamp(2.25rem, 5vw, 4.2rem);
-		line-height: 1.04;
-	}
-
-	.about-hero p,
-	.about-paper p {
-		max-width: 780px;
-		color: rgb(var(--gray-dark));
+	.intro {
 		font-size: 1.08rem;
-		line-height: 1.65;
-	}
-
-	.about-grid {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 1.25rem;
-		padding: 3rem 0;
-	}
-
-	.about-grid article {
-		border: 1px solid rgba(var(--gray), 0.18);
-		border-radius: 8px;
-		background: white;
-		padding: 1.35rem;
-	}
-
-	.about-grid h2,
-	.about-paper h2 {
-		font-size: clamp(1.7rem, 4vw, 2.6rem);
-	}
-
-	.about-grid p,
-	.about-grid li {
+		line-height: 1.7;
 		color: rgb(var(--gray-dark));
+		margin: 0 0 1rem;
 	}
 
-	.about-grid ul {
+	h2 {
+		margin: 2.75rem 0 0.75rem;
+		font-size: 1.35rem;
+		font-weight: 600;
+	}
+
+	p {
+		font-size: 1rem;
+		line-height: 1.7;
+		color: rgb(var(--gray-dark));
+		margin: 0 0 0.85rem;
+	}
+
+	ul {
 		padding-left: 1.2rem;
+		margin: 0 0 0.85rem;
 	}
 
-	.about-paper {
-		padding: 4rem 0 5rem;
+	li {
+		font-size: 1rem;
+		line-height: 1.7;
+		color: rgb(var(--gray-dark));
+		margin-bottom: 0.3rem;
 	}
 
 	.actions {
@@ -151,7 +125,7 @@ import Header from '../components/Header.astro';
 		flex-wrap: wrap;
 		gap: 0.75rem;
 		align-items: center;
-		margin-top: 1.5rem;
+		margin-top: 1.75rem;
 	}
 
 	.button {
@@ -177,17 +151,8 @@ import Header from '../components/Header.astro';
 	}
 
 	@media (max-width: 840px) {
-		.about-hero {
+		.about-wrap {
 			padding-top: 3.25rem;
-		}
-
-		.about-grid {
-			grid-template-columns: 1fr;
-		}
-
-		.about-grid,
-		.about-paper {
-			padding: 2.75rem 0;
 		}
 	}
 </style>
