@@ -51,11 +51,15 @@ import Header from '../components/Header.astro';
 
 				<h2>Research and implementation</h2>
 				<p>
-					ZipperGen builds on ideas from Message Sequence Charts and choreographic
-					programming. The implementation is available as an open-source Python project,
-					together with examples, tests, and links to the Lean formalization.
+					ZipperGen builds on ideas from Message Sequence Charts and
+					<a href="https://en.wikipedia.org/wiki/Choreographic_programming">choreographic programming</a>.
+					A workflow is written from a global point of view and then projected to
+					local participants. ZipperGen adapts this idea to LLM agents, tool calls,
+					human approval steps, and inspectable runtime traces.
 				</p>
 				<p>
+					The implementation is available as an open-source Python project,
+					together with examples, tests, and links to the Lean formalization.
 					The goal is practical: make multi-agent LLM systems easier to program, run,
 					inspect, and audit.
 				</p>
