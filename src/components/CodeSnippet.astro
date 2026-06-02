@@ -97,4 +97,8 @@ const { code, lang = 'python' } = Astro.props;
   .copy-btn.copied { opacity: 1; }
   .copy-btn.copied .copy-icon { display: none; }
   .copy-btn.copied .check-icon { display: inline-block; }
+
+  @media (hover: none) {
+    .copy-btn { opacity: 0.5; }
+  }
 </style>
