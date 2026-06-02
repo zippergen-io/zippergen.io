@@ -16,13 +16,12 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 		<main class="landing">
 			<section class="hero">
 				<p class="eyebrow">Global protocols for multi-agent LLM systems</p>
-				<h1>Write one global protocol. Run deadlock-free agents.</h1>
+				<h1>One global protocol. Deadlock-free by construction.</h1>
 				<p class="hero-copy">
-					Building multi-agent systems is hard because coordination logic ends up scattered across
-					agent prompts, callbacks, and state machines no one fully understands. ZipperGen gives
-					you a single global protocol: who sends what to whom, who runs which LLM, and who owns
-					each decision, including tools, humans, and external services. ZipperGen projects it
-					to each agent automatically and runs it concurrently.
+					ZipperGen defines the coordination of a multi-agent system as a global protocol:
+					who sends what to whom, which LLM runs which action, and who owns each decision,
+					including tools, humans, and external services. The protocol is projected to each
+					agent automatically and run concurrently.
 				</p>
 				<div class="hero-actions">
 					<a class="button primary" href="https://github.com/zippergen-io/zippergen">View on GitHub</a>
@@ -196,12 +195,12 @@ if latest_device_on @ Indicator:
 			<section class="quick-start">
 				<div>
 					<p class="section-label">Try it locally</p>
-					<h2>No service required for the first examples.</h2>
+					<h2>Run the first examples without API keys.</h2>
 					<p>
-						The built-in mock backend returns placeholder model outputs, so examples can be run
-						without API keys. Switch to OpenAI, Mistral, or Claude with one configuration line
-						when you want real model calls. ZipperGen can also use OpenAI-compatible local model
-						servers such as vLLM. The repository includes a small local Qwen/vLLM example.
+						The built-in mock backend returns placeholder model outputs. To use real model
+						calls, set the provider to OpenAI, Mistral, or Claude with one configuration
+						line. ZipperGen also accepts OpenAI-compatible local model servers such as vLLM.
+						The repository includes a small local Qwen example.
 					</p>
 				</div>
 				<CodeSnippet
