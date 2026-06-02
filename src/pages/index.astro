@@ -15,13 +15,15 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 		<Header />
 		<main class="landing">
 			<section class="hero">
-				<p class="eyebrow">Global protocols for multi-agent LLM systems</p>
-				<h1>One global protocol. Deadlock-free by construction.</h1>
+				<h1>Global workflows for LLM agents</h1>
 				<p class="hero-copy">
-					ZipperGen defines the coordination of a multi-agent system as a global protocol:
-					who sends what to whom, which LLM runs which action, and who owns each decision,
-					including tools, humans, and external services. The protocol is projected to each
-					agent automatically and run concurrently.
+					ZipperGen is a Python DSL and runtime for multi-agent LLM systems.
+					You write one global protocol: who talks to whom, who calls tools or LLMs,
+					and who owns each decision. ZipperGen projects the protocol to local agents
+					and runs them concurrently.
+				</p>
+				<p class="hero-copy hero-copy-sub">
+					Coordination is explicit, inspectable, and deadlock-free by construction.
 				</p>
 				<div class="hero-actions">
 					<a class="button primary" href="https://github.com/zippergen-io/zippergen">View on GitHub</a>
@@ -34,7 +36,6 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 						<img src="/lean.svg" alt="Lean verified" height="34" />
 					</a>
 				</div>
-				<p class="trust-note">Core projection theorems machine-checked in Lean 4.</p>
 				<figure class="hero-shot">
 					<img
 						src="/zipperchat-msc.png"
@@ -45,16 +46,26 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 
 			<section class="feature-grid" aria-label="Core properties">
 				<article>
-					<h2>Global first</h2>
-					<p>Write the coordination once as a protocol instead of scattering it across agent prompts and callbacks.</p>
+					<h2>Global protocols</h2>
+					<p>Write the coordination once: messages, decisions, tools, LLM calls, and human approval points.</p>
 				</article>
 				<article>
-					<h2>Projected locally</h2>
-					<p>Each lifeline receives the local program it needs: sends, receives, owned decisions, tool calls, and optional human control points.</p>
+					<h2>Local agents</h2>
+					<p>ZipperGen projects the protocol to one local program per lifeline. Each agent receives only the sends, receives, decisions, and actions it needs.</p>
 				</article>
 				<article>
-					<h2>Deadlock-free</h2>
-					<p>If the workflow compiles, the coordination layer is structurally deadlock-free by construction.</p>
+					<h2>Concurrent runtime</h2>
+					<p>The projected agents run concurrently. The generated coordination code preserves the message structure of the protocol.</p>
+				</article>
+				<article>
+					<h2>Inspectable execution</h2>
+					<p>Runs can be inspected as message sequence charts in ZipperChat.</p>
+				</article>
+				<article class="feature-wide">
+					<h2>Formal core</h2>
+					<p>The projection is based on Message Sequence Charts. The core deadlock-freedom theorem is machine-checked in Lean 4.</p>
+					<p class="formal-refs">Bollig, Függer, Nowak. <em>Provable Coordination for LLM Agents via Message Sequence Charts.</em> <a href="https://arxiv.org/abs/2604.17612">arXiv:2604.17612 [cs.PL]</a></p>
+					<p class="formal-refs">Bollig. <em>Causal Past Logic for Runtime Verification of Distributed LLM Agent Workflows.</em> <a href="https://arxiv.org/abs/2605.20923">arXiv:2605.20923 [cs.LO]</a></p>
 				</article>
 			</section>
 
@@ -70,8 +81,8 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 
 			<section class="split-section">
 				<div>
-					<p class="section-label">Tiny workflow</p>
-					<h2>Branching has an owner.</h2>
+					<p class="section-label">Example: branching with an owner</p>
+					<h2>Branching with an owner.</h2>
 					<p>
 						The annotation <code>@ Editor</code> says that Editor owns the decision. ZipperGen
 						generates the control communication needed by the other lifelines.
@@ -98,71 +109,33 @@ def write_tweet(topic: str @ User) -> str:
 
 			<section class="split-section">
 				<div>
-					<p class="section-label">Larger example</p>
-					<h2>Two event loops, shared agents, no routing code.</h2>
+					<p class="section-label">Example: command center</p>
+					<h2>Two parallel loops, shared agents.</h2>
 					<p>
-						<code>command_center.py</code> runs two independent loops in parallel. One handles
-						incoming email: <code>Mailbox</code> polls the inbox, <code>Dispatcher</code> classifies
-						each message, and fragments handle scheduling, cancellations, tasks, and replies.
-						The other handles Telegram commands from the owner. <code>Calendar</code>,
-						<code>Writer</code>, and <code>User</code> are shared between both streams.
-						ZipperGen's projection ensures each receives exactly the messages it needs, from
-						whichever stream generated them, in the order the protocol requires.
+						<code>Calendar</code>, <code>Writer</code>, and <code>User</code> are shared lifelines.
+						ZipperGen's projection ensures each receives exactly the messages it needs from
+						whichever branch generated them.
 					</p>
-					<p>
-						Run it with mock data to see both streams live without any API keys:
-					</p>
-					<CodeSnippet lang="bash" code={`python examples/command_center.py --mock`} />
+					<p><a href="https://github.com/zippergen-io/zippergen/blob/main/examples/command_center.py">Full source on GitHub</a></p>
 				</div>
 				<CodeSnippet
 					code={`@workflow
 def command_center():
     with parallel:
         with branch:
-            while True @ Mailbox:
-                if mail_present() @ Mailbox:
-                    Mailbox: email = pop_pending_email()
-                    Mailbox(email) >> Dispatcher(email)
-                    Dispatcher: route = classify_email(email)
-                    Dispatcher: route = normalize_route(route)
-
-                    if (route == "spam") @ Dispatcher:
-                        ...
-                    elif (route == "scheduling") @ Dispatcher:
-                        scheduling_branch(email)
-                    elif (route == "task") @ Dispatcher:
-                        task_branch(email)
-                        reply_branch(email)
-                    else:
-                        reply_branch(email)
-                else:
-                    Mailbox: _ = wait_briefly()
-
+            email_loop()
         with branch:
-            while True @ Chat:
-                if chat_present() @ Chat:
-                    Chat: chat_msg = pop_pending_chat()
-                    Chat(chat_msg) >> Dispatcher(chat_msg)
-                    Dispatcher: chat_route = classify_chat(chat_msg)
-                    Dispatcher: chat_route = normalize_route(chat_route)
-
-                    if (chat_route == "schedule_meeting") @ Dispatcher:
-                        schedule_meeting_from_chat(chat_msg)
-                    elif (chat_route == "create_task") @ Dispatcher:
-                        create_task_from_chat(chat_msg)
-                    ...
-                else:
-                    Chat: _ = wait_briefly()`}
+            chat_loop()`}
 				/>
 			</section>
 
 			<section class="bands">
 				<div>
-					<h2>Causal runtime guards</h2>
+					<h2>Runtime guards</h2>
 					<p>
-						When locally received data can be stale, guards can read the latest causally visible
-						state instead of a sequential log. Vector clocks and message-carried views make the
-						guard result depend on the asynchronous communication structure.
+						Guards can read the latest causally visible state instead of a sequential log.
+						Vector clocks and message-carried views make the guard result depend on the
+						asynchronous communication structure.
 					</p>
 					<CodeSnippet
 						code={`latest_device_on = At[Device].on == True
@@ -172,10 +145,10 @@ if latest_device_on @ Indicator:
 					/>
 				</div>
 				<div>
-					<h2>Parallel regions</h2>
+					<h2>Parallel workflows</h2>
 					<p>
 						Parallel regions run several sub-programs concurrently. Shared lifelines interleave
-						their branch-local programs, and branch-specific channels preserve FIFO order where it matters.
+						their branch-local programs, and branch-specific channels preserve FIFO order.
 					</p>
 					<CodeSnippet
 						code={`with parallel:
@@ -194,13 +167,12 @@ if latest_device_on @ Indicator:
 
 			<section class="quick-start">
 				<div>
-					<p class="section-label">Try it locally</p>
+					<p class="section-label">Run locally</p>
 					<h2>Run the first examples without API keys.</h2>
 					<p>
 						The built-in mock backend returns placeholder model outputs. To use real model
 						calls, set the provider to OpenAI, Mistral, or Claude with one configuration
 						line. ZipperGen also accepts OpenAI-compatible local model servers such as vLLM.
-						The repository includes a small local Qwen example.
 					</p>
 				</div>
 				<CodeSnippet
@@ -215,28 +187,10 @@ python examples/parallel.py              # fan-out / fan-in across branches`}
 				/>
 			</section>
 
-			<section class="formal-section">
-				<p class="section-label">Formal foundation</p>
-				<h2>Based on Message Sequence Charts.</h2>
-				<p>
-					The projection from a global protocol to per-agent local programs is syntax-directed,
-					and deadlock-freedom follows by structural induction, with no runtime checking required.
-					The core theorems are in the paper and machine-checked in Lean 4.
-				</p>
-				<p>
-					Bollig, Függer, Nowak. <em>Provable Coordination for LLM Agents via Message Sequence Charts.</em>
-					<a href="https://arxiv.org/abs/2604.17612">arXiv:2604.17612 [cs.PL]</a>
-				</p>
-				<p>
-					Bollig. <em>Causal Past Logic for Runtime Verification of Distributed LLM Agent Workflows.</em>
-					<a href="https://arxiv.org/abs/2605.20923">arXiv:2605.20923 [cs.LO]</a>
-				</p>
-			</section>
-
 			<section class="cta-section">
-				<h2>Build inspectable agent workflows.</h2>
+				<h2>Start from the examples.</h2>
 				<p>
-					Start from the examples, inspect the generated message sequence chart, and decide whether
+					Inspect the generated message sequence chart and decide whether
 					global protocols fit your agent system.
 				</p>
 				<div class="hero-actions">
@@ -265,7 +219,6 @@ python examples/parallel.py              # fan-out / fan-in across branches`}
 	.split-section,
 	.bands,
 	.quick-start,
-	.formal-section,
 	.cta-section {
 		width: min(1120px, calc(100% - 2rem));
 		margin: 0 auto;
@@ -275,7 +228,6 @@ python examples/parallel.py              # fan-out / fan-in across branches`}
 		padding: 5.5rem 0 3rem;
 	}
 
-	.eyebrow,
 	.section-label {
 		margin: 0 0 0.75rem;
 		color: var(--accent-dark);
@@ -298,6 +250,10 @@ python examples/parallel.py              # fan-out / fan-in across branches`}
 		color: rgb(var(--gray-dark));
 		font-size: 1.16rem;
 		line-height: 1.65;
+	}
+
+	.hero-copy-sub {
+		margin-top: 0.85rem;
 	}
 
 	.hero-actions {
@@ -333,12 +289,6 @@ python examples/parallel.py              # fan-out / fan-in across branches`}
 	.hero-actions img {
 		display: block;
 		border-radius: 0;
-	}
-
-	.trust-note {
-		margin: 0.75rem 0 0;
-		color: rgb(var(--gray));
-		font-size: 0.9rem;
 	}
 
 	.hero-shot {
@@ -380,7 +330,7 @@ python examples/parallel.py              # fan-out / fan-in across branches`}
 
 	.feature-grid {
 		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: 1rem;
 		padding: 1rem 0 3rem;
 	}
@@ -392,13 +342,8 @@ python examples/parallel.py              # fan-out / fan-in across branches`}
 		padding: 1.15rem;
 	}
 
-	.feature-grid h2,
-	.bands h2,
-	.quick-start h2,
-	.formal-section h2,
-	.cta-section h2,
-	.split-section h2 {
-		font-size: clamp(1.7rem, 4vw, 2.6rem);
+	.feature-grid article.feature-wide {
+		grid-column: 1 / -1;
 	}
 
 	.feature-grid h2 {
@@ -409,10 +354,21 @@ python examples/parallel.py              # fan-out / fan-in across branches`}
 	.feature-grid p,
 	.bands p,
 	.quick-start p,
-	.formal-section p,
 	.cta-section p,
 	.split-section p {
 		color: rgb(var(--gray-dark));
+	}
+
+	.formal-refs {
+		margin-top: 0.6rem;
+		font-size: 0.85rem;
+	}
+
+	.bands h2,
+	.quick-start h2,
+	.cta-section h2,
+	.split-section h2 {
+		font-size: clamp(1.7rem, 4vw, 2.6rem);
 	}
 
 	.split-section,
@@ -423,7 +379,6 @@ python examples/parallel.py              # fan-out / fan-in across branches`}
 		align-items: start;
 		padding: 4rem 0 2rem;
 	}
-
 
 	.bands {
 		display: grid;
@@ -442,22 +397,8 @@ python examples/parallel.py              # fan-out / fan-in across branches`}
 		margin-top: 1rem;
 	}
 
-	.formal-section,
 	.cta-section {
-		padding: 4rem 0;
-	}
-
-	.formal-section {
-		padding-bottom: 2rem;
-	}
-
-	.formal-section p,
-	.cta-section p {
-		max-width: 760px;
-	}
-
-	.cta-section {
-		padding-bottom: 5rem;
+		padding: 4rem 0 5rem;
 	}
 
 	@media (max-width: 840px) {
@@ -472,10 +413,13 @@ python examples/parallel.py              # fan-out / fan-in across branches`}
 			grid-template-columns: 1fr;
 		}
 
+		.feature-grid article.feature-wide {
+			grid-column: 1;
+		}
+
 		.split-section,
 		.bands,
 		.quick-start,
-		.formal-section,
 		.cta-section {
 			padding: 2.75rem 0;
 		}
