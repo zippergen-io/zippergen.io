@@ -19,15 +19,15 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 				<p class="hero-copy">
 					ZipperGen is a Python DSL and runtime for multi-agent LLM systems.
 					You write one global protocol: who talks to whom, who calls tools or LLMs,
-					and who owns each decision. ZipperGen projects the protocol to local agents
-					and runs them concurrently.
+					and who owns each decision. ZipperGen projects the protocol into a local
+					program for each participant, runs them durably, shows exactly where each
+					participant is waiting, and deploys the result as a real service.
 				</p>
 				<p class="hero-copy hero-copy-sub">
-					Coordination is explicit, inspectable, and deadlock-free by construction.
+					Coordination deadlocks are ruled out by construction, not by runtime checks.
 				</p>
 				<div class="hero-actions">
 					<a class="button primary" href="https://github.com/zippergen-io/zippergen">View on GitHub</a>
-					<a class="button secondary" href="/demo">Try the demo</a>
 					<a class="button secondary" href="https://arxiv.org/abs/2604.17612">Read the paper</a>
 					<a href="https://github.com/zippergen-io/paper-isola/tree/main/Lean">
 						<img src="/lean-formalized.svg" alt="Lean formalized" height="34" />
@@ -38,16 +38,17 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 				</div>
 				<figure class="hero-shot">
 					<img
-						src="/zipperchat-msc.png"
-						alt="ZipperChat MSC view showing lifeline columns with action, message, and decision cards"
+						src="/studio-run-inspect.svg"
+						alt="Studio run inspection showing each participant's position in its projected local program"
 					/>
+					<figcaption>A blocked run shows exactly where every participant is waiting, in its own projected program.</figcaption>
 				</figure>
 				<figure class="hero-shot">
 					<img
-						src="/zipperchat-dialog.png"
-						alt="ZipperChat detail view with email context on the left and a draft reply form on the right"
+						src="/studio-deployment-show.svg"
+						alt="Studio deployment view showing the supervised service, durable store, and run state"
 					/>
-					<figcaption>Clicking a human action opens a detail view. You can review the context and respond.</figcaption>
+					<figcaption>The same workflow deployed as a supervised service with a durable store.</figcaption>
 				</figure>
 			</section>
 
@@ -61,18 +62,19 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 					<p>ZipperGen projects the protocol to one local program per lifeline. Each agent receives only the sends, receives, decisions, and actions it needs.</p>
 				</article>
 				<article>
-					<h2>Concurrent runtime</h2>
-					<p>The projected agents run concurrently. The generated coordination code preserves the message structure of the protocol.</p>
+					<h2>Durable execution</h2>
+					<p>The projected agents run concurrently against a durable store. A run survives a crash or a closed terminal and resumes where it stopped, and external effects are journaled so they are not repeated.</p>
 				</article>
 				<article>
-					<h2>Inspectable execution</h2>
-					<p>Runs can be inspected as message sequence charts in ZipperChat.</p>
+					<h2>Deployed as a service</h2>
+					<p>One guided command turns a reviewed workflow into a supervised service with its own durable store, on your machine or an ordinary Linux server. No cluster and no vendor account.</p>
 				</article>
 				<article class="feature-wide">
 					<h2>Formal core</h2>
 					<p>The projection is based on <a href="https://en.wikipedia.org/wiki/Message_sequence_chart">Message Sequence Charts</a> and <a href="https://en.wikipedia.org/wiki/Choreographic_programming">choreographic programming</a>. The core deadlock-freedom theorem is machine-checked in Lean 4. The implementation is on <a href="https://github.com/zippergen-io/zippergen">GitHub</a>.</p>
-					<p class="formal-refs">Bollig, Függer, Nowak. <em>Provable Coordination for LLM Agents via Message Sequence Charts.</em> <a href="https://arxiv.org/abs/2604.17612">arXiv:2604.17612 [cs.PL]</a></p>
-					<p class="formal-refs">Bollig. <em>Causal Past Logic for Runtime Verification of Distributed LLM Agent Workflows.</em> <a href="https://arxiv.org/abs/2605.20923">arXiv:2605.20923 [cs.LO]</a></p>
+					<p class="formal-refs">Bollig, Függer, Nowak. <em>Provable Coordination for LLM Agents via Message Sequence Charts.</em> <a href="https://arxiv.org/abs/2604.17612">arXiv:2604.17612 [cs.PL]</a>. Accepted at ISoLA 2026.</p>
+					<p class="formal-refs">Bollig. <em>Deadlock-Free Parallel Regions for Projected Workflows.</em> Accepted at EXPRESS/SOS 2026. Preprint forthcoming.</p>
+					<p class="formal-refs">Bollig. <em>Causal Past Logic for Runtime Verification of Distributed LLM Agent Workflows.</em> <a href="https://arxiv.org/abs/2605.20923">arXiv:2605.20923 [cs.LO]</a>. Under submission.</p>
 				</article>
 			</section>
 
@@ -158,19 +160,20 @@ if latest_device_on @ Indicator:
 					lang="bash"
 					code={`git clone https://github.com/zippergen-io/zippergen.git
 cd zippergen
-pip install -e .
+uv sync
 
-python examples/hello.py                 # two lifelines, one LLM call
-python examples/command_center.py --mock # email triage + Telegram commands
-python examples/parallel.py              # fan-out / fan-in across branches`}
+uv run zippergen run examples/hello.py:hello --llm mock \\
+  --input 'topic=Say hello to ZipperGen'
+
+uv run zippergen studio   # guided specification, review, and deployment`}
 				/>
 			</section>
 
 			<section class="cta-section">
 				<h2>Start from the examples.</h2>
 				<p>
-					Inspect the generated message sequence chart and decide whether
-					global protocols fit your agent system.
+					The README, the tutorial, and the full development and deployment
+					manual are on GitHub.
 				</p>
 				<div class="hero-actions">
 					<a class="button primary" href="https://github.com/zippergen-io/zippergen">Get the code</a>
