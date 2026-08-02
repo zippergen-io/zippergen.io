@@ -37,7 +37,8 @@ import Header from '../components/Header.astro';
 				</p>
 				<p>
 					ZipperGen makes the coordination explicit. The global workflow is the source of
-					truth, and executions can be inspected as message sequence charts.
+					truth. Executions can be inspected through durable traces and live projected
+					local programs.
 				</p>
 
 				<h2>Design principles</h2>
@@ -46,7 +47,10 @@ import Header from '../components/Header.astro';
 					<li>Local agent programs should be derived automatically.</li>
 					<li>Human approval and side effects should be explicit.</li>
 					<li>Executions should be inspectable.</li>
-					<li>The coordination layer should be deadlock-free by construction.</li>
+					<li>
+						For well-formed workflows in ZipperGen's supported language, the coordination
+						layer should be deadlock-free by construction.
+					</li>
 				</ul>
 
 				<h2>Research and implementation</h2>

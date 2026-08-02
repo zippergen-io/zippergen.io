@@ -25,15 +25,13 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 				</p>
 				<p class="hero-copy hero-copy-sub">
 					Coordination deadlocks are ruled out by construction, not by runtime checks.
+					This guarantee applies to well-formed workflows in ZipperGen's supported language.
 				</p>
 				<div class="hero-actions">
 					<a class="button primary" href="https://github.com/zippergen-io/zippergen">View on GitHub</a>
 					<a class="button secondary" href="https://arxiv.org/abs/2604.17612">Read the paper</a>
 					<a href="https://github.com/zippergen-io/zippergen-lean/tree/main/isola">
 						<img src="/lean-formalized.svg" alt="Lean formalized" height="34" />
-					</a>
-					<a href="https://github.com/zippergen-io/zippergen-lean/tree/main/isola">
-						<img src="/lean.svg" alt="Lean verified" height="34" />
 					</a>
 				</div>
 				<figure class="hero-shot">
@@ -56,7 +54,7 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 				</article>
 				<article>
 					<h2>Durable execution</h2>
-					<p>The projected agents run concurrently against a durable store. A run survives a crash or a closed terminal and resumes where it stopped, and external effects are journaled so they are not repeated.</p>
+					<p>The projected agents run concurrently against a durable store. A run survives a crash or a closed terminal and resumes where it stopped. Completed action results are journaled for recovery. External effects should use idempotency keys because a crash at the remote-call boundary can repeat them.</p>
 				</article>
 				<article>
 					<h2>Deployed as a service</h2>
@@ -145,8 +143,9 @@ if latest_device_on @ Indicator:
 					<h2>Run the first examples without API keys.</h2>
 					<p>
 						The built-in mock backend returns placeholder model outputs. To use real model
-						calls, set the provider to OpenAI, Mistral, or Claude with one configuration
-						line. ZipperGen also accepts OpenAI-compatible local model servers such as vLLM.
+						calls, create a named configuration for OpenAI, Mistral, Claude, or an
+						OpenAI-compatible local model server such as vLLM. Assign it to a participant
+						or action in Studio.
 					</p>
 				</div>
 				<CodeSnippet

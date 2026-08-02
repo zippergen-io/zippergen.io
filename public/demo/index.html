@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ZipperChat</title>
+<title>ZipperChat prototype · ZipperGen</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -39,6 +39,18 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; overflow: hidden; }
 body { font-family: var(--sans); background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.4; }
+
+.prototype-banner {
+  flex: 0 0 auto;
+  padding: 8px 16px;
+  border-bottom: 1px solid #f2c9bf;
+  background: #fff3ef;
+  color: var(--text-soft);
+  text-align: center;
+  font-size: 13px;
+}
+.prototype-banner strong { color: var(--text); }
+.prototype-banner a { color: var(--accent); font-weight: 600; }
 
 /* ── App shell ──────────────────────────────────────────────────────────── */
 #app  { display: flex; flex-direction: column; height: 100vh; }
@@ -367,6 +379,11 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); font
 </head>
 <body>
 <div id="app">
+  <div class="prototype-banner" role="note">
+    <strong>Earlier visualization prototype.</strong>
+    Current development, inspection, and deployment are available in
+    <a href="https://zippergen.io/">ZipperGen Studio</a>.
+  </div>
   <header id="hdr">
     <a class="hdr-logo-link" href="https://zippergen.io" aria-label="ZipperGen home"><svg class="hdr-logo" style="height:36px;width:auto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 605.92 107.00" role="img" aria-label="ZipperGen logo">
 <g transform="translate(12,15)">
