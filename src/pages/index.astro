@@ -17,163 +17,61 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 			<section class="hero">
 				<h1>Global workflows for LLM agents</h1>
 				<p class="hero-copy">
-					ZipperGen is a Python DSL and runtime for multi-agent LLM systems.
-					You write one global protocol: who talks to whom, who calls tools or LLMs,
-					and who owns each decision. ZipperGen projects the protocol into a local
-					program for each participant, runs them durably, shows exactly where each
-					participant is waiting, and deploys the result as a real service.
-				</p>
-				<p class="hero-copy hero-copy-sub">
-					Coordination deadlocks are ruled out by construction, not by runtime checks.
-					This guarantee applies to well-formed workflows in ZipperGen's supported language.
+					Write one protocol: who talks to whom, who calls a model, and who owns
+					each decision. ZipperGen turns it into a separate program for each
+					participant and runs them. Coordination deadlocks are ruled out by
+					construction, and the core theorem is machine-checked in Lean 4.
 				</p>
 				<div class="hero-actions">
 					<a class="button primary" href="https://github.com/zippergen-io/zippergen">View on GitHub</a>
 					<a class="button secondary" href="https://arxiv.org/abs/2604.17612">Read the paper</a>
 					<a href="https://github.com/zippergen-io/zippergen-lean/tree/main/isola">
-						<img src="/lean-formalized.svg" alt="Lean formalized" height="34" />
-					</a>
-					<a href="https://github.com/zippergen-io/zippergen-lean/tree/main/isola">
-						<img src="/lean.svg" alt="Lean verified" height="34" />
+						<img src="/lean.svg" alt="Lean verified" height="30" />
 					</a>
 				</div>
-				<figure class="hero-shot">
-					<img
-						src="/studio-run-inspect.svg"
-						alt="Studio run inspection showing each participant's position in its projected local program"
-					/>
-					<figcaption>A blocked run shows exactly where every participant is waiting, in its own projected program.</figcaption>
-				</figure>
 			</section>
 
-			<section class="feature-grid" aria-label="Core properties">
-				<article>
-					<h2>Global protocols</h2>
-					<p>Write the coordination once: messages, decisions, tools, LLM calls, and human approval points.</p>
-				</article>
-				<article>
-					<h2>Local agents</h2>
-					<p>ZipperGen projects the protocol to one local program per lifeline. Each agent receives only the sends, receives, decisions, and actions it needs.</p>
-				</article>
-				<article>
-					<h2>Durable execution</h2>
-					<p>The projected agents run concurrently against a durable store. A run survives a crash or a closed terminal and resumes where it stopped. Completed action results are journaled for recovery. External effects should use idempotency keys because a crash at the remote-call boundary can repeat them.</p>
-				</article>
-				<article>
-					<h2>Deployed as a service</h2>
-					<p>One guided command turns a reviewed workflow into a supervised service with its own durable store, on your machine or an ordinary Linux server. No cluster and no vendor account.</p>
-				</article>
-				<article class="feature-wide">
-					<h2>Formal core</h2>
-					<p>The projection is based on <a href="https://en.wikipedia.org/wiki/Message_sequence_chart">Message Sequence Charts</a> and <a href="https://en.wikipedia.org/wiki/Choreographic_programming">choreographic programming</a>. The core deadlock-freedom theorem is machine-checked in Lean 4. The implementation is on <a href="https://github.com/zippergen-io/zippergen">GitHub</a>.</p>
-					<p class="formal-refs">Bollig, Függer, Nowak. <em>Provable Coordination for LLM Agents via Message Sequence Charts.</em> <a href="https://arxiv.org/abs/2604.17612">arXiv:2604.17612 [cs.PL]</a>. Accepted at ISoLA 2026.</p>
-					<p class="formal-refs">Bollig. <em>Deadlock-Free Parallel Regions for Projected Workflows.</em> Accepted at EXPRESS/SOS 2026. Preprint forthcoming.</p>
-					<p class="formal-refs">Bollig. <em>Causal Past Logic for Runtime Verification of Distributed LLM Agent Workflows.</em> <a href="https://arxiv.org/abs/2605.20923">arXiv:2605.20923 [cs.LO]</a>. Under submission.</p>
-				</article>
-			</section>
-
-			<section class="split-section">
-				<div>
-					<p class="section-label">Example: branching with an owner</p>
-					<h2>Branching with an owner.</h2>
-					<p>
-						The annotation <code>@ Editor</code> says that Editor owns the decision. ZipperGen
-						generates the control communication needed by the other lifelines.
-					</p>
-				</div>
+			<section class="peek">
 				<CodeSnippet
 					code={`@workflow
-def write_tweet(topic: str @ User) -> str:
-    User(topic) >> Writer(topic)
-    Writer: tweet = draft(topic)
-    Writer(tweet) >> Editor(tweet)
-    Editor: approved = approve(tweet)
-
-    if approved @ Editor:
-        Editor(tweet) >> User(tweet)
-    else:
-        Editor(tweet) >> Writer(tweet)
-        Writer: tweet = revise(tweet)
-        Writer(tweet) >> User(tweet)
-
-    return tweet @ User`}
+def email_approval() -> int:
+    User: message = next_unread_message()
+    while message @ User:
+        User(message) >> Writer(message)
+        Writer: draft = draft_reply(message)
+        Writer(draft) >> User(draft)
+        User: approved = approve_reply(draft)
+        if approved @ User:
+            User: handled = send_reply(draft, handled)
+        else:
+            User: handled = discard(handled)
+        User: message = next_unread_message()
+    return handled @ User`}
 				/>
-			</section>
-
-			<section class="split-section">
-				<div>
-					<p class="section-label">Example: command center</p>
-					<h2>Two parallel loops, shared agents.</h2>
-					<p>
-						<code>Calendar</code>, <code>Writer</code>, and <code>User</code> are shared lifelines.
-						ZipperGen's projection ensures each receives exactly the messages it needs from
-						whichever branch generated them.
-					</p>
-					<p><a href="https://github.com/zippergen-io/zippergen/blob/main/examples/command_center.py">Full source on GitHub</a></p>
-				</div>
-				<CodeSnippet
-					code={`@workflow
-def command_center():
-    with parallel:
-        with branch:
-            email_loop()
-        with branch:
-            chat_loop()`}
-				/>
-			</section>
-
-			<section class="split-section">
-				<div>
-					<p class="section-label">Runtime guards</p>
-					<h2>Reading causally current state.</h2>
-					<p>
-						Guards can read the latest causally visible state instead of a sequential log.
-						Vector clocks and message-carried views make the guard result depend on the
-						asynchronous communication structure.
-					</p>
-				</div>
-				<CodeSnippet
-					code={`latest_device_on = At[Device].on == True
-
-if latest_device_on @ Indicator:
-    ...`}
-				/>
-			</section>
-
-			<section class="quick-start">
-				<div>
-					<p class="section-label">Run locally</p>
-					<h2>Run the first examples without API keys.</h2>
-					<p>
-						The built-in mock backend returns placeholder model outputs. To use real model
-						calls, create a named configuration for OpenAI, Mistral, Claude, or an
-						OpenAI-compatible local model server such as vLLM. Assign it to a participant
-						or action in Studio.
-					</p>
-				</div>
-				<CodeSnippet
-					lang="bash"
-					code={`git clone https://github.com/zippergen-io/zippergen.git
-cd zippergen
-uv sync
-
-uv run zippergen run examples/hello.py:hello --llm mock \\
-  --input 'topic=Say hello to ZipperGen'
-
-uv run zippergen studio   # guided specification, review, and deployment`}
-				/>
-			</section>
-
-			<section class="cta-section">
-				<h2>Start from the examples.</h2>
-				<p>
-					The README, the tutorial, and the full development and deployment
-					manual are on GitHub.
+				<p class="caption">
+					<code>@ User</code> says who owns the decision. The Writer is never told
+					what was approved, because it does nothing either way, so the branch is
+					left out of its program entirely. Nobody writes that by hand.
 				</p>
-				<div class="hero-actions">
-					<a class="button primary" href="https://github.com/zippergen-io/zippergen">Get the code</a>
-					<a class="button secondary" href="/about">About the project</a>
-				</div>
+			</section>
+
+			<section class="closing">
+				<p>
+					The README, a tutorial, and the full guide are on GitHub. The
+					projection is based on Message Sequence Charts and choreographic
+					programming.
+				</p>
+				<p class="refs">
+					Bollig, F&uuml;gger, Nowak. <em>Provable Coordination for LLM Agents via Message Sequence Charts.</em>
+					<a href="https://arxiv.org/abs/2604.17612">arXiv:2604.17612</a>. ISoLA 2026.
+				</p>
+				<p class="refs">
+					Bollig. <em>Deadlock-Free Parallel Regions for Projected Workflows.</em> EXPRESS/SOS 2026.
+				</p>
+				<p class="refs">
+					Bollig. <em>Causal Past Logic for Runtime Verification of Distributed LLM Agent Workflows.</em>
+					<a href="https://arxiv.org/abs/2605.20923">arXiv:2605.20923</a>. Under submission.
+				</p>
 			</section>
 		</main>
 		<Footer />
@@ -193,197 +91,74 @@ uv run zippergen studio   # guided specification, review, and deployment`}
 	}
 
 	.hero,
-	.feature-grid,
-	.split-section,
-	.bands,
-	.quick-start,
-	.cta-section {
-		width: min(1120px, calc(100% - 2rem));
+	.peek,
+	.closing {
+		width: min(760px, calc(100% - 2rem));
 		margin: 0 auto;
 	}
 
 	.hero {
-		padding: 5.5rem 0 3rem;
-	}
-
-	.section-label {
-		margin: 0 0 0.75rem;
-		color: var(--accent-dark);
-		font-size: 0.82rem;
-		font-weight: 700;
-		letter-spacing: 0;
-		text-transform: uppercase;
+		padding: 4rem 0 1.5rem;
 	}
 
 	.hero h1 {
-		margin: 0;
-		font-size: clamp(2rem, 3.8vw, 3.25rem);
+		margin: 0 0 1rem;
+		font-size: clamp(2rem, 5vw, 2.9rem);
 		line-height: 1.1;
-		white-space: nowrap;
 	}
 
 	.hero-copy {
-		max-width: 760px;
-		margin: 1.35rem 0 0;
+		margin: 0 0 1.75rem;
+		font-size: 1.08rem;
+		line-height: 1.6;
 		color: rgb(var(--gray-dark));
-		font-size: 1.16rem;
-		line-height: 1.65;
-	}
-
-	.hero-copy-sub {
-		margin-top: 0.85rem;
 	}
 
 	.hero-actions {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.75rem;
 		align-items: center;
-		margin-top: 1.6rem;
+		gap: 0.75rem;
 	}
 
 	.button {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		min-height: 2.75rem;
-		padding: 0 1.1rem;
+		display: inline-block;
+		padding: 0.6rem 1.15rem;
 		border-radius: 6px;
 		font-weight: 600;
 		text-decoration: none;
 	}
 
 	.button.primary {
-		background: rgb(var(--black));
+		background: var(--accent);
 		color: white;
 	}
 
 	.button.secondary {
-		border: 1px solid rgba(var(--gray), 0.28);
-		background: white;
-		color: rgb(var(--black));
+		border: 1px solid rgb(var(--gray-light));
+		color: var(--accent-dark);
 	}
 
-	.hero-actions img {
-		display: block;
-		border-radius: 0;
+	.peek {
+		padding: 1.5rem 0;
 	}
 
-	.hero-shot {
-		margin: 3rem 0 0;
-	}
-
-	.hero-shot img {
-		display: block;
-		width: min(100%, 876px);
-		margin-inline: auto;
-		border: 1px solid rgba(var(--gray), 0.2);
-		border-radius: 8px;
-		box-shadow: 0 22px 55px rgba(19, 31, 45, 0.12);
-	}
-
-	.hero-shot figcaption {
-		margin-top: 0.75rem;
-		font-size: 0.9rem;
-		color: rgb(var(--gray));
-		text-align: center;
-	}
-
-	.feature-grid {
-		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 1rem;
-		padding: 1rem 0 3rem;
-	}
-
-	.feature-grid article {
-		border: 1px solid rgba(var(--gray), 0.18);
-		border-radius: 8px;
-		background: white;
-		padding: 1.15rem;
-	}
-
-	.feature-grid article.feature-wide {
-		grid-column: 1 / -1;
-	}
-
-	.feature-grid h2 {
-		margin-bottom: 0.4rem;
-		font-size: 1.25rem;
-	}
-
-	.feature-grid p,
-	.quick-start p,
-	.cta-section p,
-	.split-section p {
+	.caption {
+		margin: 1rem 0 0;
+		font-size: 0.95rem;
+		line-height: 1.55;
 		color: rgb(var(--gray-dark));
 	}
 
-	.formal-refs {
-		margin-top: 0.6rem;
+	.closing {
+		padding: 1rem 0 4rem;
+		font-size: 0.95rem;
+		line-height: 1.55;
+		color: rgb(var(--gray-dark));
+	}
+
+	.refs {
+		margin: 0.5rem 0 0;
 		font-size: 0.85rem;
-	}
-
-	.quick-start h2,
-	.cta-section h2,
-	.split-section h2 {
-		font-size: clamp(1.7rem, 4vw, 2.6rem);
-	}
-
-	.split-section,
-	.quick-start {
-		display: grid;
-		grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr);
-		gap: 2rem;
-		align-items: start;
-		padding: 4rem 0 2rem;
-	}
-
-	.cta-section {
-		padding: 4rem 0 5rem;
-	}
-
-	@media (max-width: 840px) {
-		.hero {
-			padding-top: 3.25rem;
-		}
-
-		.feature-grid,
-		.split-section,
-		.quick-start {
-			grid-template-columns: 1fr;
-		}
-
-		.feature-grid article.feature-wide {
-			grid-column: 1;
-		}
-
-		.split-section,
-		.quick-start,
-		.cta-section {
-			padding: 2.75rem 0;
-		}
-	}
-
-	@media (max-width: 600px) {
-		.hero h1 {
-			white-space: normal;
-			font-size: clamp(1.7rem, 8vw, 2.4rem);
-		}
-
-		.hero {
-			padding-top: 2.25rem;
-			padding-bottom: 2rem;
-		}
-
-		.hero-copy {
-			font-size: 1rem;
-		}
-
-		.split-section,
-		.quick-start,
-		.cta-section {
-			padding: 2rem 0;
-		}
 	}
 </style>

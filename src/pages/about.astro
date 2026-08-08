@@ -19,53 +19,29 @@ import Header from '../components/Header.astro';
 				<h1>A protocol-first approach to LLM agents</h1>
 
 				<p class="intro">
-					ZipperGen is a Python DSL and runtime for structured multi-agent LLM systems.
-					It is based on a simple idea: instead of wiring agents together locally and hoping
-					the pieces interact correctly, write the global protocol first.
-				</p>
-				<p class="intro">
-					A protocol describes who talks to whom, which participant performs each action,
-					and who owns each decision. ZipperGen projects this protocol to local agents
-					and runs them concurrently.
+					Most agent systems are wired together locally, one call at a time, and you
+					find out how the pieces interact by running them. ZipperGen asks you to
+					write the protocol first: who talks to whom, who performs each action, and
+					who owns each decision. The local program each participant runs is derived
+					from that, not written by hand.
 				</p>
 
-				<h2>Motivation</h2>
-				<p>
-					LLM-agent systems often combine tool calls, callbacks, queues, retries, and human
-					approval steps. As these systems grow, the coordination logic can become difficult
-					to inspect and easy to break.
-				</p>
-				<p>
-					ZipperGen makes the coordination explicit. The global workflow is the source of
-					truth. Executions can be inspected through durable traces and live projected
-					local programs.
-				</p>
-
-				<h2>Design principles</h2>
+				<h2>What follows from that</h2>
 				<ul>
-					<li>Coordination should be written globally.</li>
-					<li>Local agent programs should be derived automatically.</li>
-					<li>Human approval and side effects should be explicit.</li>
-					<li>Executions should be inspectable.</li>
-					<li>
-						For well-formed workflows in ZipperGen's supported language, the coordination
-						layer should be deadlock-free by construction.
-					</li>
+					<li>The global workflow is the source of truth, and it is readable.</li>
+					<li>A participant's program mentions only what concerns it, so it cannot
+						wait for a message the decider chose not to send.</li>
+					<li>Human approval and side effects are explicit, not buried in a callback.</li>
+					<li>For well-formed workflows, the coordination layer is deadlock-free by
+						construction rather than by testing.</li>
 				</ul>
 
-				<h2>Research and implementation</h2>
+				<h2>Where it comes from</h2>
 				<p>
-					ZipperGen builds on ideas from <a href="https://en.wikipedia.org/wiki/Message_sequence_chart">Message Sequence Charts</a> and
-					<a href="https://en.wikipedia.org/wiki/Choreographic_programming">choreographic programming</a>.
-					A workflow is written from a global point of view and then projected to
-					local participants. ZipperGen adapts this idea to LLM agents, tool calls,
-					human approval steps, and inspectable runtime traces.
-				</p>
-				<p>
-					The implementation is available as an <a href="https://github.com/zippergen-io/zippergen">open-source Python project on GitHub</a>,
-					together with examples, tests, and links to the Lean formalization.
-					The goal is practical: make multi-agent LLM systems easier to program, run,
-					inspect, and audit.
+					The projection is based on <a href="https://en.wikipedia.org/wiki/Message_sequence_chart">Message Sequence Charts</a> and
+					<a href="https://en.wikipedia.org/wiki/Choreographic_programming">choreographic programming</a>,
+					adapted to LLM agents, tool calls and human approval. The core theorem is
+					machine-checked in Lean 4. The code, the examples and the tests are on GitHub.
 				</p>
 				<div class="actions">
 					<a class="button primary" href="https://github.com/zippergen-io/zippergen">GitHub repository</a>
