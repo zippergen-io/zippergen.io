@@ -35,21 +35,21 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 				<CodeSnippet
 					code={`@workflow
 def email_approval() -> int:
-    User: message = next_unread_message()
-    while message @ User:
-        User(message) >> Writer(message)
+    Mailbox: message = next_unread_message()
+    while message @ Mailbox:
+        Mailbox(message) >> Writer(message)
         Writer: draft = draft_reply(message)
-        Writer(draft) >> User(draft)
-        User: approved = approve_reply(draft)
-        if approved @ User:
-            User: handled = send_reply(draft, handled)
+        Writer(draft) >> Mailbox(draft)
+        Mailbox: approved = approve_reply(draft)
+        if approved @ Mailbox:
+            Mailbox: handled = send_reply(draft, handled)
         else:
-            User: handled = discard(handled)
-        User: message = next_unread_message()
-    return handled @ User`}
+            Mailbox: handled = discard(handled)
+        Mailbox: message = next_unread_message()
+    return handled @ Mailbox`}
 				/>
 				<p class="caption">
-					<code>@ User</code> says who owns the decision. The Writer is never told
+					<code>@ Mailbox</code> says who owns the decision. The Writer is never told
 					what was approved, because it does nothing either way, so the branch is
 					left out of its program entirely. Nobody writes that by hand.
 				</p>
