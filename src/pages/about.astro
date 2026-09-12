@@ -9,39 +9,65 @@ import Header from '../components/Header.astro';
 	<head>
 		<BaseHead
 			title="About ZipperGen"
-			description="A protocol-first approach to LLM agents. Why ZipperGen exists, its design principles, and its research background."
+			description="Why ZipperGen brings workflow code, saved state, human approvals, and deployment into one Python framework."
 		/>
 	</head>
 	<body>
 		<Header />
 		<main class="about-page">
 			<div class="about-wrap">
-				<h1>A protocol-first approach to LLM agents</h1>
+				<h1>Why ZipperGen</h1>
 
 				<p class="intro">
-					Most agent systems are wired together locally, one call at a time, and you
-					find out how the pieces interact by running them. ZipperGen asks you to
-					write the protocol first: who talks to whom, who performs each action, and
-					who owns each decision. The local program each participant runs is derived
-					from that, not written by hand.
+					ZipperGen aims to make it easier to turn an agent workflow into a
+					running service. It brings workflow code, saved state, human approvals,
+					and deployment into one Python framework. You can run it on your own
+					machine or server.
 				</p>
 
-				<h2>What follows from that</h2>
-				<ul>
-					<li>The global workflow is the source of truth, and it is readable.</li>
-					<li>A participant's program mentions only what concerns it, so it cannot
-						wait for a message the decider chose not to send.</li>
-					<li>Human approval and side effects are explicit, not buried in a callback.</li>
-					<li>For well-formed workflows, the coordination layer is deadlock-free by
-						construction rather than by testing.</li>
-				</ul>
+				<h2>From writing to running</h2>
+				<p>
+					You write the workflow and the actions it calls. You configure the
+					models, external services, and approval channels it needs. The CLI then
+					checks the project and deploys it as a service. Once it is running, the
+					same CLI shows its status, logs, and pending approvals.
+				</p>
+				<p>
+					The runtime saves workflow state so a service can resume after a
+					restart. Calls to external services still need care because a crash can
+					cause an action to run again. The
+					<a href="https://github.com/zippergen-io/zippergen/blob/main/docs/durable-storage.md">storage guide</a>
+					explains what is saved and how recovery works.
+				</p>
+
+				<h2>Why one workflow?</h2>
+				<p>
+					The global workflow says who sends what to whom, who calls a model,
+					and who owns each decision. ZipperGen derives the program for each
+					participant from that description. Each program contains only the work
+					and communication that participant needs.
+				</p>
+				<p>
+					This gives you one place to read and review the coordination. Human
+					decisions and calls to external services are visible in the workflow.
+					You can write it yourself or ask a coding agent to help. Either way,
+					the result is Python code in an ordinary project directory.
+				</p>
 
 				<h2>Where it comes from</h2>
 				<p>
 					The projection is based on <a href="https://en.wikipedia.org/wiki/Message_sequence_chart">Message Sequence Charts</a> and
 					<a href="https://en.wikipedia.org/wiki/Choreographic_programming">choreographic programming</a>,
-					adapted to LLM agents, tool calls and human approval. The core theorem is
-					machine-checked in Lean 4. The code, the examples and the tests are on GitHub.
+					adapted to LLM agents, tool calls and human approval. For well-formed
+					workflows covered by the formal model, the generated programs cannot
+					deadlock. The core theorem is machine-checked in Lean 4.
+				</p>
+				<p>
+					Causal Past Logic (CPL) adds guards that check earlier events and values
+					that are causally visible at a decision. The
+					<a href="https://github.com/zippergen-io/zippergen#formal-foundation">README</a>
+					explains the scope of the formal results. The code, examples, and tests
+					are also on GitHub.
 				</p>
 				<div class="actions">
 					<a class="button primary" href="https://github.com/zippergen-io/zippergen">GitHub repository</a>
@@ -90,18 +116,6 @@ import Header from '../components/Header.astro';
 		line-height: 1.7;
 		color: rgb(var(--gray-dark));
 		margin: 0 0 0.85rem;
-	}
-
-	ul {
-		padding-left: 1.2rem;
-		margin: 0 0 0.85rem;
-	}
-
-	li {
-		font-size: 1rem;
-		line-height: 1.7;
-		color: rgb(var(--gray-dark));
-		margin-bottom: 0.3rem;
 	}
 
 	.actions {

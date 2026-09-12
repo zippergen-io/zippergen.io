@@ -15,23 +15,26 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 		<Header />
 		<main class="landing">
 			<section class="hero">
-				<h1>Global workflows for LLM agents</h1>
+				<h1>Write one workflow.<br />Run it as a service.</h1>
 				<p class="hero-copy">
-					Write one protocol: who talks to whom, who calls a model, and who owns
-					each decision. ZipperGen turns it into a separate program for each
-					participant and runs them. Coordination deadlocks are ruled out by
-					construction, and the core theorem is machine-checked in Lean 4.
+					ZipperGen is a Python framework for workflows with LLM agents, people,
+					and services. Write who does what and who makes each decision.
+					ZipperGen runs the participants, saves their progress, and keeps track
+					of human approvals. Use one CLI to configure, deploy, and inspect the
+					workflow on your machine or server.
 				</p>
 				<div class="hero-actions">
-					<a class="button primary" href="https://github.com/zippergen-io/zippergen">View on GitHub</a>
-					<a class="button secondary" href="https://arxiv.org/abs/2604.17612">Read the paper</a>
-					<a href="https://github.com/zippergen-io/zippergen-lean/tree/main/isola">
-						<img src="/lean.svg" alt="Lean verified" height="30" />
-					</a>
+					<a class="button primary" href="https://github.com/zippergen-io/zippergen#quick-start">Get started</a>
+					<a class="button secondary" href="https://github.com/zippergen-io/zippergen">View on GitHub</a>
 				</div>
 			</section>
 
 			<section class="peek">
+				<h2>Start with an approval workflow</h2>
+				<p>
+					This workflow waits for a message, asks a model to draft a reply, and
+					asks you before sending it. Then it waits for the next message.
+				</p>
 				<CodeSnippet
 					code={`@workflow
 def email_approval() -> int:
@@ -49,18 +52,74 @@ def email_approval() -> int:
     return handled @ Mailbox`}
 				/>
 				<p class="caption">
-					<code>@ Mailbox</code> says who owns the decision. The Writer is never told
-					what was approved, because it does nothing either way, so the branch is
-					left out of its program entirely. Nobody writes that by hand.
+					<code>@ Mailbox</code> says who owns the decision. The actions define how
+					messages are read, replies are drafted, and approval is requested. The
+					<a href="https://github.com/zippergen-io/zippergen/blob/main/docs/first-workflow.pdf">tutorial</a>
+					starts with a local folder and approval in the terminal.
+				</p>
+			</section>
+
+			<section class="operations">
+				<h2>Run it and see what is happening</h2>
+				<p>
+					Before deployment, configure the model and any external services the
+					workflow needs. Choose how you want to receive approval requests, for
+					example through Telegram. Then check and deploy the project:
+				</p>
+				<CodeSnippet lang="bash" code={`zg validate
+zg check --strict
+zg deploy`} />
+				<p>
+					ZipperGen starts the service and saves its progress. Pending approvals
+					stay available across a restart. From the same project directory, you
+					can see what needs attention and how the service is running:
+				</p>
+				<CodeSnippet lang="bash" code={`zg deploy tasks
+zg deploy status
+zg deploy logs`} />
+				<p>
+					Answer approval requests in the configured chat or use
+					<code>zg deploy approve</code>. The
+					<a href="https://github.com/zippergen-io/zippergen/blob/main/docs/workflow-development-deployment-guide.pdf">deployment guide</a>
+					covers setup and running the service on macOS or Linux.
+				</p>
+			</section>
+
+			<section class="authoring">
+				<h2>Work in your usual editor</h2>
+				<p>
+					A project is an ordinary directory with a Python workflow, a plain-text
+					specification, and a small configuration file. Write the workflow
+					yourself or ask a coding agent such as Claude Code or Codex to help.
+					<code>zippergen skill</code> provides the authoring instructions.
+					You and the agent use the same CLI. The code stays in files you can
+					read, review, and change.
 				</p>
 			</section>
 
 			<section class="closing">
+				<h2>One workflow for all participants</h2>
 				<p>
-					The README, a tutorial, and the full guide are on GitHub. The
-					projection is based on Message Sequence Charts and choreographic
-					programming.
+					ZipperGen derives a program for each participant from the global
+					workflow. Each program contains only the work and communication that
+					participant needs. In the example above, the Writer has no approval
+					branch because it has no work in either outcome.
 				</p>
+				<p>
+					This approach is called choreographic programming. For well-formed
+					workflows covered by the formal model, the generated programs cannot
+					deadlock. The core theorem is machine-checked in Lean 4. CPL guards
+					can also check earlier events and values that are causally visible
+					at a decision. The
+					<a href="https://github.com/zippergen-io/zippergen#formal-foundation">README</a>
+					explains the scope of these guarantees.
+				</p>
+				<div class="research-links">
+					<a href="https://arxiv.org/abs/2604.17612">Read the paper</a>
+					<a href="https://github.com/zippergen-io/zippergen-lean/tree/main/isola">
+						<img src="/lean.svg" alt="Core theorem checked in Lean 4" height="30" />
+					</a>
+				</div>
 				<p class="refs">
 					Bollig, F&uuml;gger, Nowak. <em>Provable Coordination for LLM Agents via Message Sequence Charts.</em>
 					<a href="https://arxiv.org/abs/2604.17612">arXiv:2604.17612</a>. ISoLA 2026.
@@ -92,6 +151,8 @@ def email_approval() -> int:
 
 	.hero,
 	.peek,
+	.operations,
+	.authoring,
 	.closing {
 		width: min(760px, calc(100% - 2rem));
 		margin: 0 auto;
@@ -121,6 +182,19 @@ def email_approval() -> int:
 		gap: 0.75rem;
 	}
 
+	.landing h2 {
+		margin: 0 0 0.85rem;
+		font-size: clamp(1.3rem, 3vw, 1.6rem);
+		line-height: 1.25;
+	}
+
+	.peek p,
+	.operations p,
+	.authoring p {
+		font-size: 1rem;
+		line-height: 1.65;
+	}
+
 	.button {
 		display: inline-block;
 		padding: 0.6rem 1.15rem;
@@ -139,7 +213,9 @@ def email_approval() -> int:
 		color: var(--accent-dark);
 	}
 
-	.peek {
+	.peek,
+	.operations,
+	.authoring {
 		padding: 1.5rem 0;
 	}
 
@@ -160,5 +236,13 @@ def email_approval() -> int:
 	.refs {
 		margin: 0.5rem 0 0;
 		font-size: 0.85rem;
+	}
+
+	.research-links {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 1rem;
+		margin: 1rem 0;
 	}
 </style>
