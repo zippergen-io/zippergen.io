@@ -38,8 +38,9 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 				<CodeSnippet
 					code={`@workflow
 def email_approval() -> int:
-    Mailbox: message = next_unread_message()
-    while message @ Mailbox:
+    Mailbox: item = next_unread_message(processed)
+    while (item is not None) @ Mailbox:
+        Mailbox: message = message_text(item)
         Mailbox(message) >> Writer(message)
         Writer: draft = draft_reply(message)
         Writer(draft) >> Mailbox(draft)
@@ -48,7 +49,8 @@ def email_approval() -> int:
             Mailbox: handled = send_reply(draft, handled)
         else:
             Mailbox: handled = discard(handled)
-        Mailbox: message = next_unread_message()
+        Mailbox: processed = complete_message(item, processed)
+        Mailbox: item = next_unread_message(processed)
     return handled @ Mailbox`}
 				/>
 				<p class="caption">
