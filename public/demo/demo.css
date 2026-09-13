@@ -206,3 +206,5 @@ footer nav { flex-shrink: 0; }
 #completion { overflow: auto; line-height: 1.8; }
 #completion h2 { margin: 0 0 20px; font: inherit; color: var(--teal); }
 #completion p { margin: 0 0 24px; }
+
+#live-privacy { margin-top: 12px; }

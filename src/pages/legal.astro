@@ -7,7 +7,7 @@ import Header from '../components/Header.astro';
 <!doctype html>
 <html lang="en">
 	<head>
-		<BaseHead title="Legal Notice | ZipperGen" description="Legal notice for zippergen.io" />
+		<BaseHead title="Legal & Privacy | ZipperGen" description="Legal notice and privacy information for ZipperGen and its interactive demo" />
 		<style>
 			h2 {
 				margin-top: 0.9em;
@@ -18,11 +18,12 @@ import Header from '../components/Header.astro';
 	<body>
 		<Header />
 		<main>
-			<h1>Mentions légales</h1>
+			<h1>Legal notice &amp; privacy</h1>
+			<p>Updated 13 September 2026. This notice covers zippergen.io, its interactive demo and demo-api.zippergen.io.</p>
 
 			<p>This website is a personal academic project.</p>
 
-			<h2>Editor</h2>
+			<h2>Editor and data controller</h2>
 			<address>
 				Benedikt Bollig<br />
 				LMF – CNRS &amp; ENS Paris-Saclay<br />
@@ -34,14 +35,113 @@ import Header from '../components/Header.astro';
 			</address>
 
 			<h2>Hosting</h2>
+			<p>The website is served through Cloudflare Pages.</p>
 			<address>
 				Cloudflare, Inc.<br />
 				101 Townsend St.<br />
 				San Francisco, CA 94107, USA
 			</address>
 
-			<h2>Privacy</h2>
-			<p>This site does not collect personal data and does not use cookies.</p>
+			<p>The live demo backend runs on a server provided by:</p>
+			<address>
+				netcup GmbH<br />
+				Emmy-Noether-Straße 10<br />
+				76131 Karlsruhe, Germany<br />
+				Phone: +49 721 7540755 0<br />
+				<a href="https://www.netcup.com/en/contact/legal-notice">Netcup legal notice</a>
+			</address>
+
+			<h2 id="demo-privacy">Privacy in the demo</h2>
+			<p>
+				The simulated walkthrough runs in your browser. It does not call a model,
+				send email or contact Telegram. The optional live step creates a temporary
+				workflow on the demo server and asks for your approval through a Telegram bot.
+				It uses a fixed example reply. You can use the simulation without connecting Telegram.
+			</p>
+
+			<h2>Data used by the live step</h2>
+			<ul>
+				<li>Session identifiers, creation and expiry times, workflow state and your approval or rejection.</li>
+				<li>Your Telegram user and private-chat identifiers, to deliver the request and check who answers it.</li>
+				<li>Incoming Telegram updates, temporarily queued for reliable processing. Telegram may include your name, username and messages in these updates.</li>
+				<li>A hash of your IP address and session-start times, to limit repeated requests. A hash is not treated as anonymous data.</li>
+			</ul>
+			<p>
+				Your browser also sends ordinary connection information, such as its IP address,
+				to the hosting providers. Please use the bot's Start and approval controls rather
+				than sending personal or confidential messages. The live step needs the session
+				and Telegram identifiers to work. No model provider receives these demo interactions.
+			</p>
+
+			<h2>Purpose and legal basis</h2>
+			<p>
+				These data are used to provide the demonstration you request, save its progress,
+				associate your answer with the right workflow and protect the service from abuse.
+				The legal basis is legitimate interests under Article 6(1)(f) GDPR:
+				operating a small public demonstration and keeping it reliable and secure.
+				We do not use these data for advertising, profiling or model training.
+			</p>
+
+			<h2>Retention</h2>
+			<p>
+				A live session expires 30 minutes after creation. During normal operation,
+				the service then deletes its session record and saved workflow files, including
+				the associated Telegram identifiers and decision. Completed runs use the same
+				expiry time. Incoming Telegram updates are removed from the processing queue
+				after they have been handled. Failed processing may delay removal until a retry succeeds.
+			</p>
+			<p>
+				The application retains hashed IP addresses and start times for the rolling
+				one-hour limit, then removes them during maintenance. If the server is stopped,
+				cleanup resumes when it starts again. These periods describe the demo's application
+				data, not messages kept by Telegram or connection and security records managed
+				by the hosting providers.
+			</p>
+
+			<h2>Browser storage</h2>
+			<p>
+				The demo uses local storage to remember your progress, your current live-session
+				link and which completion animations have already played. This information can
+				remain after a server session expires. Start over resets the walkthrough and
+				forgets the current live session. Clear this site's data in your browser settings
+				to remove all locally saved information. Blocking local storage does not prevent
+				the basic walkthrough, but progress may not survive a reload.
+			</p>
+			<p>
+				The demo code does not set advertising or analytics cookies. Hosting providers
+				may use technical or security mechanisms under their own policies.
+				QR codes are generated in your browser. The session link is not sent to an
+				external QR-code service. Keep live-session links private, as they provide access to the run.
+			</p>
+
+			<h2>Providers and international processing</h2>
+			<p>
+				The editor administers the demo. Cloudflare serves the website, Netcup hosts the
+				backend, and Telegram delivers bot messages when you choose the live step.
+				Telegram also processes your use of its service under its own privacy policy.
+				Deleting a demo session does not delete the conversation from Telegram.
+			</p>
+			<p>
+				Cloudflare and Telegram operate internationally, so their processing may occur
+				outside the European Economic Area. Their policies describe processing locations,
+				retention and transfer safeguards. You can contact the editor above for further
+				information about the providers used by this demo.
+			</p>
+			<ul>
+				<li><a href="https://www.cloudflare.com/policies/privacy/">Cloudflare privacy policy</a></li>
+				<li><a href="https://www.netcup.com/en/contact/data-privacy">Netcup privacy policy</a></li>
+				<li><a href="https://telegram.org/privacy">Telegram privacy policy</a></li>
+			</ul>
+
+			<h2>Your rights and contact</h2>
+			<p>
+				You can ask for access, correction or deletion of your personal data, request
+				a restriction of processing, or object to processing based on legitimate interests.
+				These rights apply subject to the conditions in data-protection law.
+				Contact <a href="mailto:bollig@lmf.cnrs.fr">bollig@lmf.cnrs.fr</a>.
+				You can also lodge a complaint with the
+				<a href="https://www.cnil.fr/fr/adresser-une-plainte">CNIL</a> or your local supervisory authority.
+			</p>
 		</main>
 		<Footer />
 	</body>
