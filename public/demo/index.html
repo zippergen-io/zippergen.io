@@ -40,6 +40,11 @@
               <p class="note">Opening the example…</p>
               <noscript><p>This demo needs JavaScript. You can <a href="./approval-example.zip" download>download the example</a> and run it yourself.</p></noscript>
             </div>
+            <section id="completion" aria-labelledby="completion-title" hidden>
+              <h2 id="completion-title">Your workflow is complete.</h2>
+              <p id="completion-message"></p>
+              <a id="live-next-step" class="text-link" href="./approval-example.zip" download>Try it with your own workflow</a>
+            </section>
             <section id="telegram-preview" class="telegram" aria-label="Simulated Telegram conversation" hidden>
               <p class="telegram-name">ZipperGen demo bot</p>
               <div class="telegram-message">
@@ -67,7 +72,6 @@
   <dialog id="live-dialog" aria-labelledby="live-title">
     <form method="dialog"><h2 id="live-title">Live on our demo server</h2><button type="submit">Close</button></form>
     <p id="live-status" role="status" aria-live="polite"></p>
-    <a id="live-next-step" class="text-link" href="./approval-example.zip" download hidden>Try it with your own workflow</a>
     <a id="telegram-link" class="text-link" target="_blank" rel="noopener noreferrer" hidden>Open the Telegram demo bot ↗</a>
     <details id="telegram-qr" hidden>
       <summary>Scan with your phone</summary>

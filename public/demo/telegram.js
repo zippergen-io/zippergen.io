@@ -16,7 +16,7 @@ const qrCanvas = document.querySelector('#telegram-qr-code');
 const qrHelp = document.querySelector('#telegram-qr-help');
 let qrUrl = null;
 const confetti = document.querySelector('#live-confetti');
-const nextStep = document.querySelector('#live-next-step');
+const completion = document.querySelector('#completion');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const celebratedKey = 'zippergen-celebrated-runs-v1';
 const celebrated = new Set();
@@ -25,7 +25,7 @@ try {
   const saved = JSON.parse(localStorage.getItem(celebratedKey));
   if (Array.isArray(saved)) {
     for (const token of saved.slice(-32)) {
-      if (typeof token === 'string' && /^[A-Za-z0-9_-]{32}$/.test(token)) celebrated.add(token);
+      if (typeof token === 'string' && /^(?:sim_)?[A-Za-z0-9_-]{32}$/.test(token)) celebrated.add(token);
     }
   }
 } catch { /* Remember within this page when browser storage is unavailable. */ }
@@ -35,22 +35,23 @@ function clearConfetti() {
   confetti.replaceChildren();
 }
 
-function celebrate() {
-  if (liveState !== 'approved' || !liveToken || liveDialog.open || document.hidden || celebrated.has(liveToken)) return;
-  celebrated.add(liveToken);
+function celebrate(key = liveToken) {
+  if (key === liveToken && liveState !== 'approved') return;
+  if (!key || completion.hidden || liveDialog.open || document.hidden || celebrated.has(key)) return;
+  celebrated.add(key);
   try { localStorage.setItem(celebratedKey, JSON.stringify([...celebrated].slice(-32))); } catch { /* Storage is optional. */ }
   if (reducedMotion.matches) return;
   const colors = ['#abd4cd', '#b0c7df', '#f0c674', '#c5d48f'];
-  for (let index = 0; index < 24; index++) {
+  for (let index = 0; index < 60; index++) {
     const piece = document.createElement('i');
-    piece.style.left = `${8 + Math.random() * 84}%`;
+    piece.style.left = `${2 + Math.random() * 96}%`;
     piece.style.backgroundColor = colors[index % colors.length];
-    piece.style.setProperty('--drift', `${Math.random() * 70 - 35}px`);
-    piece.style.setProperty('--turn', `${Math.random() * 240 - 120}deg`);
-    piece.style.animationDelay = `${Math.random() * 180}ms`;
+    piece.style.setProperty('--drift', `${Math.random() * 180 - 90}px`);
+    piece.style.setProperty('--turn', `${Math.random() * 540 - 270}deg`);
+    piece.style.animationDelay = `${Math.random() * 700}ms`;
     confetti.append(piece);
   }
-  confettiTimer = setTimeout(clearConfetti, 1800);
+  confettiTimer = setTimeout(clearConfetti, 4300);
 }
 
 
@@ -109,7 +110,7 @@ export function resetTelegram() {
   requestGeneration++;
   clearTimeout(pollTimer);
   clearConfetti();
-  nextStep.hidden = true;
+  completion.hidden = true;
   document.querySelector('#live-title').textContent = 'Live on our demo server';
   liveToken = telegramUrl = liveState = null;
   liveBusy = false;
@@ -185,7 +186,7 @@ async function poll() {
     liveStatus.textContent = messages[state.state] || 'Checking the saved workflow state.';
     const complete = ['approved', 'rejected'].includes(state.state);
     document.querySelector('#live-title').textContent = complete ? 'Your workflow is complete.' : 'Live on our demo server';
-    nextStep.hidden = !complete;
+    if (complete) liveStatus.textContent = 'The workflow has completed. Close this window to see the result.';
     if (state.state === 'approved') celebrate();
     else clearConfetti();
     if (!state.available && !['approved', 'rejected', 'error'].includes(state.state)) {
@@ -196,7 +197,7 @@ async function poll() {
     if (generation !== requestGeneration) return;
     if (error.status === 410) {
       clearConfetti();
-      nextStep.hidden = true;
+      completion.hidden = true;
       document.querySelector('#live-title').textContent = 'Live on our demo server';
       liveState = 'expired';
       changed();
@@ -243,6 +244,25 @@ async function startLive() {
   } finally {
     if (generation === requestGeneration) { liveBusy = false; changed(); }
   }
+}
+
+export function renderCompletion(state) {
+  const live = liveReview();
+  const approved = live.active ? live.state === 'approved' : state.decision === true;
+  const rejected = live.active ? live.state === 'rejected' : state.decision === false;
+  const atDecision = state.entries.at(-1)?.command.startsWith('zg deploy approve ');
+  const visible = (approved || rejected) && (live.active || atDecision);
+  completion.hidden = !visible;
+  if (!visible) return false;
+  document.querySelector('#completion-message').textContent = live.active
+    ? approved
+      ? 'You approved in Telegram. ZipperGen saved your decision and continued on the server. No email was sent in this demo.'
+      : 'You rejected the reply in Telegram. ZipperGen saved your decision and completed the workflow without releasing the reply.'
+    : approved
+      ? 'You approved the reply. The simulated workflow continued and marked the request as handled. No email was sent.'
+      : 'You rejected the reply. The simulated workflow finished without sending it.';
+  if (approved) celebrate(live.active ? liveToken : `sim_${state.simulationId}`);
+  return true;
 }
 
 export function renderTelegram(state, data, runCommand) {

@@ -195,10 +195,14 @@ footer nav { flex-shrink: 0; }
 
 #live-dialog { position: relative; }
 #live-confetti { position: fixed; inset: 0; z-index: 10; overflow: hidden; pointer-events: none; }
-#live-confetti i { position: absolute; top: -12px; width: 5px; height: 9px; opacity: 0; animation: completion-confetti 1400ms ease-out both; }
+#live-confetti i { position: absolute; top: -12px; width: 6px; height: 10px; opacity: 0; animation: completion-confetti 3400ms ease-out both; }
 @keyframes completion-confetti {
   0% { opacity: 0; transform: translateY(0) rotate(0); }
   15% { opacity: .8; }
-  100% { opacity: 0; transform: translate(var(--drift), 190px) rotate(var(--turn)); }
+  100% { opacity: 0; transform: translate(var(--drift), 110vh) rotate(var(--turn)); }
 }
 @media (prefers-reduced-motion: reduce) { #live-confetti { display: none; } #live-confetti i { animation: none; } }
+
+#completion { overflow: auto; line-height: 1.8; }
+#completion h2 { margin: 0 0 20px; font: inherit; color: var(--teal); }
+#completion p { margin: 0 0 24px; }

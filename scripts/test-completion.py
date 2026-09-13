@@ -38,13 +38,16 @@ with sync_playwright() as p:
         event = "window.dispatchEvent(new Event('focus'))" if index % 2 == 0 else "document.dispatchEvent(new Event('visibilitychange'))"
         page.evaluate(event)
         expect(page.locator('#live-title')).to_have_text('Your workflow is complete.')
-        expect(page.locator('#live-status')).to_contain_text('completed the workflow')
+        expect(page.locator('#live-status')).to_contain_text('has completed')
         expect(page.get_by_role('link', name='Try it with your own workflow')).to_be_visible()
         assert page.locator('#live-next-step').get_attribute('href') == './approval-example.zip'
-        pieces = 24 if outcome == 'approved' and motion == 'no-preference' else 0
+        pieces = 60 if outcome == 'approved' and motion == 'no-preference' else 0
         assert page.evaluate('window.confettiPieces') == 0
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
         page.locator('#live-dialog button[type=submit]').click()
+        expect(page.locator('#completion')).to_be_visible()
+        expect(page.locator('#completion-message')).to_contain_text('Telegram')
+        expect(page.get_by_role('link', name='Try it with your own workflow')).to_be_visible()
         expect(page.locator('#live-confetti i')).to_have_count(pieces)
         assert page.locator('#live-confetti').evaluate('(e) => !e.closest("dialog")')
         page.locator('#resume-live').click()
@@ -59,5 +62,23 @@ with sync_playwright() as p:
         expect(page.locator('#live-title')).to_have_text('Live on our demo server')
         assert not errors, errors
         context.close()
+    for decision, motion in [('yes', 'no-preference'), ('yes', 'reduce'), ('no', 'no-preference')]:
+        context = browser.new_context(viewport={'width': 390, 'height': 850}, reduced_motion=motion)
+        page = context.new_page()
+        page.goto(args.url)
+        for command in ['zg init', 'codex']:
+            page.locator(f'[data-command="{command}"]').click()
+        page.get_by_role('button', name='Send this request').click()
+        for command in ['zg show', 'zg config', 'zg deploy', 'zg deploy tasks']:
+            page.locator(f'[data-command="{command}"]').click()
+        page.locator('#preview-approve' if decision == 'yes' else '#preview-reject').click()
+        expect(page.locator('#completion')).to_be_visible()
+        expect(page.locator('#completion-message')).to_contain_text('simulated workflow')
+        expect(page.locator('#live-confetti i')).to_have_count(60 if decision == 'yes' and motion == 'no-preference' else 0)
+        expect(page.locator('#telegram-preview')).to_be_hidden()
+        page.reload()
+        expect(page.locator('#completion')).to_be_visible()
+        expect(page.locator('#live-confetti i')).to_have_count(0)
+        context.close()
     browser.close()
-print('Passed: completion links, approved-only confetti, confetti after closing the dialog, immediate refresh on return, no replay on reopen/reload, reduced motion, reset, desktop and mobile.')
+print('Passed: persistent completion in both paths, simulated approval, approved-only confetti, confetti after closing the dialog, immediate refresh on return, no replay on reopen/reload, reduced motion, reset, desktop and mobile.')

@@ -1,8 +1,9 @@
-import { renderTelegram, initTelegram, resetTelegram, liveReview } from './telegram.js';
+import { renderTelegram, renderCompletion, initTelegram, resetTelegram, liveReview } from './telegram.js';
 
 // A finite command simulation. Nothing here invokes a shell, model, or service.
 const STORAGE_KEY = 'zippergen-shell-demo-v1';
-const fresh = () => ({ initialized: false, agent: null, workflow: false, inspected: false, configured: false, service: 'idle', decision: null, taskSeen: false, restarted: false, entries: [] });
+const simulationId = () => crypto.randomUUID().replaceAll('-', '');
+const fresh = () => ({ simulationId: simulationId(), initialized: false, agent: null, workflow: false, inspected: false, configured: false, service: 'idle', decision: null, taskSeen: false, restarted: false, entries: [] });
 let state = fresh();
 let data;
 const output = document.querySelector('#output');
@@ -27,6 +28,7 @@ try {
     state = saved;
   }
 } catch { /* Browser storage is optional. */ }
+if (!/^[A-Za-z0-9_-]{32}$/.test(state.simulationId || '')) state.simulationId = simulationId();
 const escape = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 function save() {
   state.entries = state.entries.slice(-40);
@@ -66,7 +68,7 @@ function choices() {
   if (state.service === 'stopped') return [state.decision === null ? 'The approval is saved. Start the service to continue.' : 'The service is stopped. Your decision is recorded.', [commandButton('zg deploy start'), commandButton('zg deploy tasks'), commandButton('zg deploy status')]];
   if (state.decision !== null) {
     return ['Try the project yourself, or explore what happened.', [
-      '<a href="./approval-example.zip" download>Download the example</a>',
+      ...(state.entries.at(-1)?.command.startsWith('zg deploy approve ') ? [] : ['<a href="./approval-example.zip" download>Download the example</a>']),
       commandButton('zg deploy logs'),
       '<button type="button" data-replay class="secondary">Try the other decision</button>',
     ]];
@@ -108,15 +110,21 @@ function render({ focus = false } = {}) {
   } else {
     output.innerHTML = `<p class="note">${state.workflow ? 'Run a command to inspect this project.' : 'Build a workflow that drafts replies and waits for your approval.'}</p>`;
   }
-  const telegramVisible = renderTelegram(state, data, runCommand);
-  output.hidden = Boolean(state.agent) || telegramVisible;
+  const completionVisible = renderCompletion(state);
+  const telegramVisible = renderTelegram(state, data, runCommand) && !completionVisible;
+  if (completionVisible) document.querySelector('#telegram-preview').hidden = true;
+  output.hidden = Boolean(state.agent) || telegramVisible || completionVisible;
   document.querySelector('#result-label').textContent = telegramVisible ? (liveReview().active ? 'Telegram' : 'Telegram preview') : state.agent ? 'Request' : latest?.speaker === 'note' ? 'About' : !latest ? 'Example' : 'Output';
   const stepNote = document.querySelector('#step-note');
-  stepNote.hidden = Boolean(state.agent) || !latest?.note;
+  stepNote.hidden = Boolean(state.agent) || completionVisible || !latest?.note;
   stepNote.open = false;
   stepNote.querySelector('p').textContent = latest?.note || '';
   document.querySelector('#result-command').textContent = latest ? latest.speaker === 'shell' ? latest.command : latest.speaker === 'agent' ? 'Coding agent' : 'Demo' : '';
   if (telegramVisible) document.querySelector('#result-command').textContent = liveReview().active ? 'Live on our demo server' : 'Simulated';
+  if (completionVisible) {
+    document.querySelector('#result-label').textContent = 'Completed';
+    document.querySelector('#result-command').textContent = liveReview().active ? 'Live on our demo server' : 'Simulated';
+  }
   output.scrollTop = 0;
   const [hint, buttons] = choices();
   document.querySelector('#hint').textContent = hint;
@@ -302,6 +310,7 @@ function showAbout() {
 function replay() {
   if (state.decision === null) return;
   state.decision = null;
+  state.simulationId = simulationId();
   state.service = 'running';
   state.restarted = false;
   state.taskSeen = true;
