@@ -183,7 +183,7 @@ footer nav { flex-shrink: 0; }
 .telegram-actions button { color: var(--teal); font-size: var(--body-size); padding: 4px 0; text-decoration: underline; text-underline-offset: 4px; }
 .text-link { color: var(--teal); font-size: var(--small-size); text-decoration: underline; text-underline-offset: 4px; }
 #try-live { margin-top: 24px; text-align: left; line-height: 1.8; }
-#live-details { margin-top: 24px; }
+#live-dialog #live-details { margin-top: 24px; }
 #new-live-session { margin-top: 10px; }
 #information pre { font-size: var(--small-size); margin-bottom: 20px; }
 @media (max-width: 700px) { .telegram-message { padding: 14px; } .telegram-actions button { font-size: var(--small-size); } }
