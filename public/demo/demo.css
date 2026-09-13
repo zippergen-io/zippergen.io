@@ -192,3 +192,13 @@ footer nav { flex-shrink: 0; }
 #telegram-qr summary { color: var(--teal); cursor: pointer; }
 #telegram-qr-code { display: block; width: 240px; max-width: 100%; height: auto; margin: 16px 0; background: white; }
 #telegram-qr-help { margin-bottom: 0; }
+
+#live-dialog { position: relative; }
+#live-confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+#live-confetti i { position: absolute; top: -12px; width: 5px; height: 9px; opacity: 0; animation: completion-confetti 1400ms ease-out both; }
+@keyframes completion-confetti {
+  0% { opacity: 0; transform: translateY(0) rotate(0); }
+  15% { opacity: .8; }
+  100% { opacity: 0; transform: translate(var(--drift), 190px) rotate(var(--turn)); }
+}
+@media (prefers-reduced-motion: reduce) { #live-confetti { display: none; } #live-confetti i { animation: none; } }

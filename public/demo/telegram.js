@@ -15,6 +15,44 @@ const qrDetails = document.querySelector('#telegram-qr');
 const qrCanvas = document.querySelector('#telegram-qr-code');
 const qrHelp = document.querySelector('#telegram-qr-help');
 let qrUrl = null;
+const confetti = document.querySelector('#live-confetti');
+const nextStep = document.querySelector('#live-next-step');
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+const celebratedKey = 'zippergen-celebrated-runs-v1';
+const celebrated = new Set();
+let confettiTimer;
+try {
+  const saved = JSON.parse(localStorage.getItem(celebratedKey));
+  if (Array.isArray(saved)) {
+    for (const token of saved.slice(-32)) {
+      if (typeof token === 'string' && /^[A-Za-z0-9_-]{32}$/.test(token)) celebrated.add(token);
+    }
+  }
+} catch { /* Remember within this page when browser storage is unavailable. */ }
+
+function clearConfetti() {
+  clearTimeout(confettiTimer);
+  confetti.replaceChildren();
+}
+
+function celebrate() {
+  if (liveState !== 'approved' || !liveToken || !liveDialog.open || document.hidden || celebrated.has(liveToken)) return;
+  celebrated.add(liveToken);
+  try { localStorage.setItem(celebratedKey, JSON.stringify([...celebrated].slice(-32))); } catch { /* Storage is optional. */ }
+  if (reducedMotion.matches) return;
+  const colors = ['#abd4cd', '#b0c7df', '#f0c674', '#c5d48f'];
+  for (let index = 0; index < 24; index++) {
+    const piece = document.createElement('i');
+    piece.style.left = `${8 + Math.random() * 84}%`;
+    piece.style.backgroundColor = colors[index % colors.length];
+    piece.style.setProperty('--drift', `${Math.random() * 70 - 35}px`);
+    piece.style.setProperty('--turn', `${Math.random() * 240 - 120}deg`);
+    piece.style.animationDelay = `${Math.random() * 180}ms`;
+    confetti.append(piece);
+  }
+  confettiTimer = setTimeout(clearConfetti, 1800);
+}
+
 
 function clearQR() {
   qrDetails.hidden = true;
@@ -70,6 +108,9 @@ function changed() {
 export function resetTelegram() {
   requestGeneration++;
   clearTimeout(pollTimer);
+  clearConfetti();
+  nextStep.hidden = true;
+  document.querySelector('#live-title').textContent = 'Live on our demo server';
   liveToken = telegramUrl = liveState = null;
   liveBusy = false;
   try { localStorage.removeItem(liveKey); } catch { /* Storage is optional. */ }
@@ -136,11 +177,16 @@ async function poll() {
       starting: 'Connected. The workflow is preparing your approval request.',
       waiting: 'Your workflow is waiting on the demo server. You can close this page and approve from Telegram before the session expires.',
       continuing: 'Your decision is saved. The workflow is continuing on the server.',
-      approved: 'Approved. The workflow released the example reply and completed.',
-      rejected: 'Rejected. The workflow discarded the example reply and completed.',
+      approved: 'You approved in Telegram. ZipperGen saved your decision and completed the workflow on the server.',
+      rejected: 'You rejected the reply in Telegram. ZipperGen saved your decision and completed the workflow without releasing the reply.',
       error: 'This workflow could not continue. Start over to try again.',
     };
     liveStatus.textContent = messages[state.state] || 'Checking the saved workflow state.';
+    const complete = ['approved', 'rejected'].includes(state.state);
+    document.querySelector('#live-title').textContent = complete ? 'Your workflow is complete.' : 'Live on our demo server';
+    nextStep.hidden = !complete;
+    if (state.state === 'approved') celebrate();
+    else clearConfetti();
     if (!state.available && !['approved', 'rejected', 'error'].includes(state.state)) {
       liveStatus.textContent += ' The Telegram connection is temporarily unavailable. The saved run will be retried.';
     }
@@ -148,6 +194,9 @@ async function poll() {
   } catch (error) {
     if (generation !== requestGeneration) return;
     if (error.status === 410) {
+      clearConfetti();
+      nextStep.hidden = true;
+      document.querySelector('#live-title').textContent = 'Live on our demo server';
       liveState = 'expired';
       changed();
       liveStatus.textContent = 'This live session has expired. Start a new live session or start over.';
@@ -220,6 +269,9 @@ export function renderTelegram(state, data, runCommand) {
 }
 
 export async function initTelegram() {
+  liveDialog.addEventListener('close', clearConfetti);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) clearConfetti(); else celebrate(); });
+  reducedMotion.addEventListener('change', () => { if (reducedMotion.matches) clearConfetti(); });
   qrDetails.addEventListener('toggle', showQR);
   document.querySelector('#try-live').addEventListener('click', startLive);
   document.querySelector('#resume-live').addEventListener('click', startLive);
