@@ -22,7 +22,7 @@ Use a dedicated bot. Do not run another bot program against the same token.
 The service refuses a bot with an active webhook rather than removing it.
 
 The defaults are 12 retained sessions, 30 minutes per session from creation,
-and at most 5 starts per client address per hour. Completed runs count toward
+and at most 5 starts per client address per hour unless configured otherwise. Completed runs count toward
 the limit until expiry. A rejected or approved outcome is reported only after
 the workflow has persisted its result. Closing the browser does not stop it.
 The URL fragment and optional browser storage let the visitor recover it.
@@ -205,3 +205,27 @@ Protocol references: [Telegram bot features](https://core.telegram.org/bots/feat
 [Telegram Bot API](https://core.telegram.org/bots/api),
 [Gunicorn configuration](https://gunicorn.org/reference/settings/), and
 [Caddy reverse proxy](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy).
+
+## Session limits
+
+In `/etc/zippergen-demo/config`, configure:
+
+```ini
+DEMO_MAX_STARTS_PER_IP_PER_HOUR=20
+DEMO_MAX_SESSIONS=12
+DEMO_SESSION_SECONDS=1800
+```
+
+The hourly limit accepts 1–1000 and defaults to 5. The netcup example uses 20
+for repeated testing. The retained-session limit accepts 1–32 and defaults to
+12. Session lifetime accepts 60–3600 seconds and defaults to 1800.
+
+The service reads these values on startup. The hourly setting requires the
+updated backend, it is ignored by release v2. Restart the service after changing
+configuration. Existing saved runs and hourly counters are preserved. Raising
+the hourly limit does not increase the number of retained sessions. Visitors
+sharing a public IP address share the hourly allowance.
+
+Limit messages distinguish the hourly allowance from full session capacity
+and give an estimated retry interval. Another visitor may take an available
+slot before that retry.

@@ -3,3 +3,4 @@ DEMO_ORIGINS="https://zippergen.io http://127.0.0.1:8765 http://localhost:8765"
 DEMO_STATE_DIR=/var/lib/zippergen-demo
 DEMO_SESSION_SECONDS=1800
 DEMO_MAX_SESSIONS=12
+DEMO_MAX_STARTS_PER_IP_PER_HOUR=20

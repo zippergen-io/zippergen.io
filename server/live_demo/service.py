@@ -5,6 +5,7 @@ from contextlib import closing
 import fcntl
 import hashlib
 import logging
+import math
 from pathlib import Path
 import re
 import secrets
@@ -36,11 +37,14 @@ class Gone(Exception):
 
 
 class Sessions:
-    def __init__(self, directory, client, bot_name, *, lifetime=1800, limit=12, clock=time.time):
+    def __init__(self, directory, client, bot_name, *, lifetime=1800, limit=12, starts_per_hour=5, clock=time.time):
         if not re.fullmatch(r"[A-Za-z0-9_]{5,32}", bot_name):
             raise ValueError("Invalid bot username")
         if not 60 <= lifetime <= 3600 or not 1 <= limit <= 32:
             raise ValueError("Expected a lifetime of 60–3600 seconds and 1–32 sessions")
+        if not 1 <= starts_per_hour <= 1000:
+            raise ValueError("Expected 1–1000 starts per IP address per hour")
+        self.starts_per_hour = starts_per_hour
         self.directory = Path(directory)
         self.directory.mkdir(parents=True, exist_ok=True, mode=0o700)
         self.client, self.bot_name = client, bot_name
@@ -91,12 +95,22 @@ class Sessions:
             if not self.available():
                 raise Unavailable('The live demo is temporarily unavailable. Please use the preview.')
             now = self.clock()
-            db.execute('DELETE FROM starts WHERE at < ?', (now - 3600,))
+            db.execute('DELETE FROM starts WHERE at <= ?', (now - 3600,))
             source = digest(source)
             count = db.execute('SELECT count(*) FROM sessions').fetchone()[0]
             recent = db.execute('SELECT count(*) FROM starts WHERE source=?', (source,)).fetchone()[0]
-            if count >= self.limit or recent >= 5:
-                raise Unavailable('The live demo is busy. Please try again later or use the preview.')
+            if recent >= self.starts_per_hour:
+                oldest = db.execute('SELECT at FROM starts WHERE source=? ORDER BY at LIMIT 1 OFFSET ?',
+                                    (source, recent - self.starts_per_hour)).fetchone()[0]
+                minutes = max(1, math.ceil((oldest + 3600 - now) / 60))
+                raise Unavailable(f'This network has reached the limit of {self.starts_per_hour} new sessions per hour. '
+                                  f'Try again in about {minutes} minute(s), or use the preview.')
+            if count >= self.limit:
+                expiry = db.execute('SELECT expires FROM sessions ORDER BY expires LIMIT 1 OFFSET ?',
+                                    (count - self.limit,)).fetchone()[0]
+                minutes = max(1, math.ceil((expiry - now) / 60))
+                raise Unavailable(f'All {self.limit} demo session slots are occupied. '
+                                  f'The next slot should open in about {minutes} minute(s). You can use the preview meanwhile.')
             sid, reader, start = (secrets.token_urlsafe(24) for _ in range(3))
             db.execute('BEGIN IMMEDIATE')
             try:
@@ -229,7 +243,7 @@ class Sessions:
                 self.delivery_retries[row['id']] = self.clock() + 30
                 log.warning('A demo notification could not be delivered. Retrying in 30 seconds.')
         with closing(self.connect()) as db:
-            db.execute('DELETE FROM starts WHERE at < ?', (now - 3600,))
+            db.execute('DELETE FROM starts WHERE at <= ?', (now - 3600,))
         self.last_delivery = self.clock()
 
     def start(self):

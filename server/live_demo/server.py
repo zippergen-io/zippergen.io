@@ -100,7 +100,8 @@ def create_app():
         raise RuntimeError('Cannot start the demo bot. Check its private credential and webhook configuration.') from None
     sessions = Sessions(state, client, bot['username'],
                         lifetime=int(os.environ.get('DEMO_SESSION_SECONDS', '1800')),
-                        limit=int(os.environ.get('DEMO_MAX_SESSIONS', '12')))
+                        limit=int(os.environ.get('DEMO_MAX_SESSIONS', '12')),
+                        starts_per_hour=int(os.environ.get('DEMO_MAX_STARTS_PER_IP_PER_HOUR', '5')))
     try:
         api = API(sessions, os.environ.get('DEMO_ORIGINS', '').split())
         sessions.start()

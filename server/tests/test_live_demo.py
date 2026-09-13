@@ -262,3 +262,38 @@ time.sleep(60)
             assert db.execute('SELECT count(*) FROM human_tasks').fetchone()[0] == 1
     finally:
         svc.close()
+
+
+def test_configurable_hourly_limit_and_retry_window(tmp_path):
+    now = [10000.0]
+    svc = Sessions(tmp_path, Bot(), 'zippergen_demo_bot', starts_per_hour=2, clock=lambda: now[0])
+    try:
+        svc.healthy = True
+        svc.last_poll = svc.last_delivery = now[0]
+        for _ in range(2):
+            svc.create('shared-network')
+        with pytest.raises(Unavailable, match='limit of 2 new sessions per hour.*60 minute'):
+            svc.create('shared-network')
+        svc.create('other-network')
+        # A changed limit takes existing counters into account.
+        svc.starts_per_hour = 3
+        svc.create('shared-network')
+        svc.starts_per_hour = 2
+        now[0] += 3600
+        svc.last_poll = svc.last_delivery = now[0]
+        svc.create('shared-network')
+    finally:
+        svc.close()
+
+
+def test_capacity_message_is_distinct(service):
+    service.limit = 1
+    service.create('first-network')
+    with pytest.raises(Unavailable, match='All 1 demo session slots are occupied'):
+        service.create('second-network')
+
+
+@pytest.mark.parametrize('limit', [0, -1, 1001])
+def test_invalid_hourly_limit(tmp_path, limit):
+    with pytest.raises(ValueError, match='starts per IP'):
+        Sessions(tmp_path, Bot(), 'zippergen_demo_bot', starts_per_hour=limit)
