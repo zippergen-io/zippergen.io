@@ -1,0 +1,3 @@
+Watch .txt files in mailbox/. Have an LLM draft a reply, then ask me to approve it. Send only if I approve. Keep waiting for new requests, and let me stop and resume at an approval.
+
+Use ZipperGen. Simulate sending for now, and validate the workflow and participant views.

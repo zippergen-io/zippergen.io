@@ -7,6 +7,6 @@ import { defineConfig } from 'astro/config';
 // https://astro.build/config
 export default defineConfig({
 	site: 'https://zippergen.io',
-	integrations: [mdx(), sitemap()],
+	integrations: [mdx(), sitemap({ customPages: ['https://zippergen.io/demo/'] })],
 	devToolbar: { enabled: false },
 });

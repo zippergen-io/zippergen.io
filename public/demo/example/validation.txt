@@ -1,0 +1,159 @@
+Workflow email_approval: valid
+OK   lifelines: 2 unique lifeline(s): Writer, Mailbox
+OK   variable availability: every participant reads only values definitely available locally
+OK   projection Writer: WhileRecvStmt
+OK   projection Mailbox: SeqStmt
+OK   deployment declaration: 1 field(s), 0 package(s), 0 setup step(s)
+OK   workflow inputs: none, the run starts without setup questions
+OK   canonical rendering: global and local code views rendered successfully
+
+@workflow
+def email_approval() -> int:
+    while (item is not None) @ Mailbox:
+        Mailbox(message) >> Writer(message)
+        Writer(draft) >> Mailbox(draft)
+    return handled @ Mailbox
+
+# Actions
+@effect
+def next_unread_message(processed: int) -> Json:
+    """Return the oldest unread message, waiting until one arrives.
+
+    A message is a ``.txt`` file in the mailbox directory. Reading leaves it
+    in place. Its filename and content travel together in durable workflow
+    state until ``complete_message`` marks it handled after the decision.
+
+    This call does not return until there is something to hand back, which is
+    why the workflow never finishes on its own. Setting ``max_messages`` gives
+    it a budget instead, and it returns ``None`` once that budget is spent.
+    The durable processed count includes both approved and rejected messages.
+    """
+
+    if processed >= _max_messages:
+        return None
+    while True:
+        _mailbox.mkdir(parents=True, exist_ok=True)
+        pending = sorted(_mailbox.glob("*.txt"))
+        if pending:
+            oldest = pending[0]
+            text = oldest.read_text(encoding="utf-8").strip()
+            return {"name": oldest.name, "text": text}
+        time.sleep(_poll_seconds)
+
+@pure
+def message_text(item: Json) -> str:
+    return item["text"]
+
+@llm(
+    system='You write short, friendly replies to work email. Two sentences at most. No greeting, no sign-off.',
+    user='Reply to this message:\n\n{message}',
+    parse='text',
+)
+def draft_reply(message: str) -> str: ...
+
+@human(kind='confirm', outputs=['approved: bool'], context='Proposed reply:\n\n{draft}', instruction='Send this reply?')
+def approve_reply(draft: str) -> bool: ...
+
+@effect
+def send_reply(draft: str, handled: int) -> int:
+    """Send the approved reply. Printing it is this tutorial's 'send'."""
+
+    # Start on a fresh line because another parallel role may currently own
+    # the terminal prompt. Real connectors should use the same compact,
+    # participant-labelled convention for user-facing effect notifications.
+    print("\n✓ Mailbox · reply sent")
+    return handled + 1
+
+@pure
+def discard(handled: int) -> int:
+    return handled
+
+@effect
+def complete_message(item: Json, processed: int) -> int:
+    """Mark this input handled, including a retry after its rename succeeded.
+
+    This demo has one consumer and gives each input a unique filename. Keep
+    input files unchanged until they become .done files. Real mail delivery
+    also needs an idempotency key at the sending service.
+    """
+    name = item["name"]
+    if Path(name).name != name or Path(name).suffix != ".txt":
+        raise ValueError("Expected a mailbox .txt filename")
+    source = _mailbox / name
+    done = source.with_suffix(".done")
+    if source.exists():
+        if done.exists():
+            raise FileExistsError(f"Mailbox filenames must be unique: {name}")
+        if source.read_text(encoding="utf-8").strip() != item["text"]:
+            raise ValueError(f"Message changed while awaiting review: {name}")
+        source.rename(done)
+    elif not done.exists() or done.read_text(encoding="utf-8").strip() != item["text"]:
+        raise ValueError(f"Cannot find the reviewed message: {name}")
+    return processed + 1
+
+@workflow
+def email_approval() -> int:
+    Mailbox: item = next_unread_message(processed)
+    while (item is not None) @ Mailbox:
+        Mailbox: message = message_text(item)
+        Mailbox(message) >> Writer(message)
+        Writer: draft = draft_reply(message)
+        Writer(draft) >> Mailbox(draft)
+        Mailbox: approved = approve_reply(draft)
+        if (approved) @ Mailbox:
+            Mailbox: handled = send_reply(draft, handled)
+        else:
+            Mailbox: handled = discard(handled)
+        Mailbox: processed = complete_message(item, processed)
+        Mailbox: item = next_unread_message(processed)
+    return handled @ Mailbox
+
+# Deployment declaration (normalized data form)
+zippergen_deployment = {'description': 'Watch a mailbox directory and ask before sending a reply.',
+ 'fields': ({'name': 'mailbox',
+             'prompt': 'Mailbox directory to watch',
+             'target': 'option',
+             'default': None,
+             'required': True,
+             'secret': False,
+             'env': None,
+             'choices': (),
+             'help': None,
+             'when': None,
+             'when_values': (),
+             'path_exists': True},),
+ 'packages': (),
+ 'setup': (),
+ 'files': ()}
+
+# Generated local projection for Writer; read-only code view.
+# send/recv/recv_decision denote projected runtime operations.
+
+@role('Writer')
+def email_approval__Writer() -> None:
+    while recv_decision('Mailbox'):
+        message = recv('Mailbox')
+        draft = draft_reply(message)
+        send('Mailbox', draft)
+
+# Generated local projection for Mailbox; read-only code view.
+# send/recv/recv_decision denote projected runtime operations.
+
+@role('Mailbox')
+def email_approval__Mailbox() -> int:
+    item = next_unread_message(processed)
+    while item is not None:
+        send_decision('Writer', True)
+        message = message_text(item)
+        send('Writer', message)
+        draft = recv('Writer')
+        approved = approve_reply(draft)
+        if approved:
+            handled = send_reply(draft, handled)
+        else:
+            handled = discard(handled)
+        processed = complete_message(item, processed)
+        item = next_unread_message(processed)
+    else:
+        send_decision('Writer', False)
+    return handled

@@ -1,0 +1,8 @@
+demo-api.zippergen.io {
+    request_body {
+        max_size 1KB
+    }
+    reverse_proxy 127.0.0.1:8787 {
+        header_up X-Real-IP {remote_host}
+    }
+}

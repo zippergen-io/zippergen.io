@@ -1,0 +1,10 @@
+# Add this site block to the existing Caddy configuration.
+# Replace the hostname with a DNS name pointing to the demo server.
+demo-api.example.org {
+    request_body {
+        max_size 1KB
+    }
+    reverse_proxy 127.0.0.1:8787 {
+        header_up X-Real-IP {remote_host}
+    }
+}

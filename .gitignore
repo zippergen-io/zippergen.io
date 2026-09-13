@@ -22,3 +22,13 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# Python live demo backend
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+server/state/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm

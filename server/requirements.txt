@@ -1,0 +1,3 @@
+# The tested framework revision, including actor checks and durable Telegram delivery.
+zippergen @ git+https://github.com/zippergen-io/zippergen.git@0346b490d72699228031eee8349528a77ac389ba
+gunicorn==26.2.0
