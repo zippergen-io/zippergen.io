@@ -36,7 +36,7 @@ function clearConfetti() {
 }
 
 function celebrate() {
-  if (liveState !== 'approved' || !liveToken || !liveDialog.open || document.hidden || celebrated.has(liveToken)) return;
+  if (liveState !== 'approved' || !liveToken || liveDialog.open || document.hidden || celebrated.has(liveToken)) return;
   celebrated.add(liveToken);
   try { localStorage.setItem(celebratedKey, JSON.stringify([...celebrated].slice(-32))); } catch { /* Storage is optional. */ }
   if (reducedMotion.matches) return;
@@ -144,6 +144,7 @@ async function api(path, options = {}) {
 }
 
 function showLive() {
+  clearConfetti();
   if (!liveDialog.open) liveDialog.showModal();
 }
 
@@ -269,8 +270,18 @@ export function renderTelegram(state, data, runCommand) {
 }
 
 export async function initTelegram() {
-  liveDialog.addEventListener('close', clearConfetti);
-  document.addEventListener('visibilitychange', () => { if (document.hidden) clearConfetti(); else celebrate(); });
+  const refreshLive = () => {
+    if (liveToken && apiBase && !document.hidden) poll();
+  };
+  liveDialog.addEventListener('close', () => {
+    celebrate();
+    refreshLive();
+  });
+  window.addEventListener('focus', refreshLive);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) clearConfetti();
+    else refreshLive();
+  });
   reducedMotion.addEventListener('change', () => { if (reducedMotion.matches) clearConfetti(); });
   qrDetails.addEventListener('toggle', showQR);
   document.querySelector('#try-live').addEventListener('click', startLive);

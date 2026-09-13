@@ -23,8 +23,9 @@ with sync_playwright() as p:
             }).observe(document, {subtree: true, childList: true});
         ''')
         context.route('**/live-config.json', lambda route: route.fulfill(json={'api_base': 'https://completion-test.invalid'}))
+        server_state = {'state': 'waiting'}
         context.route('https://completion-test.invalid/api/session', lambda route: route.fulfill(json={
-            'state': outcome, 'expires_at': 2000000000, 'available': True,
+            'state': server_state['state'], 'expires_at': 2000000000, 'available': True,
         }))
         page = context.new_page()
         errors = []
@@ -32,15 +33,20 @@ with sync_playwright() as p:
         token = str(index) * 32
         url = args.url + '#live=' + token
         page.goto(url)
+        expect(page.locator('#live-status')).to_contain_text('waiting on the demo server')
+        server_state['state'] = outcome
+        event = "window.dispatchEvent(new Event('focus'))" if index % 2 == 0 else "document.dispatchEvent(new Event('visibilitychange'))"
+        page.evaluate(event)
         expect(page.locator('#live-title')).to_have_text('Your workflow is complete.')
         expect(page.locator('#live-status')).to_contain_text('completed the workflow')
         expect(page.get_by_role('link', name='Try it with your own workflow')).to_be_visible()
         assert page.locator('#live-next-step').get_attribute('href') == './approval-example.zip'
         pieces = 24 if outcome == 'approved' and motion == 'no-preference' else 0
-        assert page.evaluate('window.confettiPieces') == pieces
+        assert page.evaluate('window.confettiPieces') == 0
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
         page.locator('#live-dialog button[type=submit]').click()
-        expect(page.locator('#live-confetti i')).to_have_count(0)
+        expect(page.locator('#live-confetti i')).to_have_count(pieces)
+        assert page.locator('#live-confetti').evaluate('(e) => !e.closest("dialog")')
         page.locator('#resume-live').click()
         expect(page.locator('#live-title')).to_have_text('Your workflow is complete.')
         assert page.evaluate('window.confettiPieces') == pieces
@@ -54,4 +60,4 @@ with sync_playwright() as p:
         assert not errors, errors
         context.close()
     browser.close()
-print('Passed: completion links, approved-only confetti, no replay on reopen/refresh, reduced motion, reset, desktop and mobile.')
+print('Passed: completion links, approved-only confetti, confetti after closing the dialog, immediate refresh on return, no replay on reopen/reload, reduced motion, reset, desktop and mobile.')

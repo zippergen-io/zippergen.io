@@ -194,7 +194,7 @@ footer nav { flex-shrink: 0; }
 #telegram-qr-help { margin-bottom: 0; }
 
 #live-dialog { position: relative; }
-#live-confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+#live-confetti { position: fixed; inset: 0; z-index: 10; overflow: hidden; pointer-events: none; }
 #live-confetti i { position: absolute; top: -12px; width: 5px; height: 9px; opacity: 0; animation: completion-confetti 1400ms ease-out both; }
 @keyframes completion-confetti {
   0% { opacity: 0; transform: translateY(0) rotate(0); }
