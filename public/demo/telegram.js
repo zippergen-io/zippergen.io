@@ -282,6 +282,7 @@ export function renderTelegram(state, data, runCommand) {
   }
   document.querySelector('#try-live').hidden = !apiBase || live.active;
   document.querySelector('#live-privacy').hidden = !apiBase || live.active;
+  document.querySelector('#live-capacity').hidden = !apiBase || live.active;
   for (const [id, yes] of [['preview-approve', true], ['preview-reject', false]]) {
     const button = document.querySelector(`#${id}`);
     button.disabled = live.active || state.service !== 'running' || decision !== null;
@@ -322,6 +323,7 @@ export async function initTelegram() {
   } catch { /* The default simulated journey works without the backend. */ }
   document.querySelector('#try-live').hidden = !apiBase || liveReview().active;
   document.querySelector('#live-privacy').hidden = !apiBase || liveReview().active;
+  document.querySelector('#live-capacity').hidden = !apiBase || liveReview().active;
   const hashToken = new URLSearchParams(location.hash.slice(1)).get('live');
   let saved;
   try { saved = JSON.parse(localStorage.getItem(liveKey)); } catch { /* Optional browser storage. */ }

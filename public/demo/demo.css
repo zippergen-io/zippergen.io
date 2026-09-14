@@ -207,4 +207,4 @@ footer nav { flex-shrink: 0; }
 #completion h2 { margin: 0 0 20px; font: inherit; color: var(--teal); }
 #completion p { margin: 0 0 24px; }
 
-#live-privacy { margin-top: 12px; }
+#live-capacity, #live-privacy { margin-top: 12px; }
