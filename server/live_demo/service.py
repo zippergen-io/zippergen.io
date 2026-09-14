@@ -37,7 +37,7 @@ class Gone(Exception):
 
 
 class Sessions:
-    def __init__(self, directory, client, bot_name, *, lifetime=1800, limit=12, starts_per_hour=5, clock=time.time):
+    def __init__(self, directory, client, bot_name, *, lifetime=1800, limit=12, starts_per_hour=5, clock=time.time, metrics_enabled=False):
         if not re.fullmatch(r"[A-Za-z0-9_]{5,32}", bot_name):
             raise ValueError("Invalid bot username")
         if not 60 <= lifetime <= 3600 or not 1 <= limit <= 32:
@@ -76,6 +76,19 @@ class Sessions:
                 );
             ''')
 
+        with closing(self.connect()) as db:
+            columns = {row[1] for row in db.execute('PRAGMA table_info(sessions)')}
+            for column in ('measured', 'metrics_mask'):
+                if column not in columns:
+                    db.execute(f'ALTER TABLE sessions ADD COLUMN {column} INTEGER NOT NULL DEFAULT 0')
+        self.metrics = None
+        if metrics_enabled:
+            from .metrics import Metrics
+            try:
+                self.metrics = Metrics(self.directory / 'sessions.sqlite', clock=self.clock)
+            except sqlite3.Error:
+                log.warning('Usage counts could not be initialized. The demo will continue without them.')
+
     def connect(self):
         db = sqlite3.connect(self.directory / 'sessions.sqlite', timeout=10, isolation_level=None)
         db.row_factory = sqlite3.Row
@@ -90,9 +103,11 @@ class Sessions:
         with closing(self.connect()) as db:
             return db.execute('SELECT * FROM sessions ORDER BY created').fetchall()
 
-    def create(self, source):
+    def create(self, source, *, measure=True):
         with self.lock, closing(self.connect()) as db:
             if not self.available():
+                if measure and self.metrics:
+                    self.metrics.increment('live_unavailable')
                 raise Unavailable('The live demo is temporarily unavailable. Please use the preview.')
             now = self.clock()
             db.execute('DELETE FROM starts WHERE at <= ?', (now - 3600,))
@@ -100,12 +115,16 @@ class Sessions:
             count = db.execute('SELECT count(*) FROM sessions').fetchone()[0]
             recent = db.execute('SELECT count(*) FROM starts WHERE source=?', (source,)).fetchone()[0]
             if recent >= self.starts_per_hour:
+                if measure and self.metrics:
+                    self.metrics.increment('live_rate_refused')
                 oldest = db.execute('SELECT at FROM starts WHERE source=? ORDER BY at LIMIT 1 OFFSET ?',
                                     (source, recent - self.starts_per_hour)).fetchone()[0]
                 minutes = max(1, math.ceil((oldest + 3600 - now) / 60))
                 raise Unavailable(f'This network has reached the limit of {self.starts_per_hour} new sessions per hour. '
                                   f'Try again in about {minutes} minute(s), or use the preview.')
             if count >= self.limit:
+                if measure and self.metrics:
+                    self.metrics.increment('live_capacity_refused')
                 expiry = db.execute('SELECT expires FROM sessions ORDER BY expires LIMIT 1 OFFSET ?',
                                     (count - self.limit,)).fetchone()[0]
                 minutes = max(1, math.ceil((expiry - now) / 60))
@@ -114,13 +133,15 @@ class Sessions:
             sid, reader, start = (secrets.token_urlsafe(24) for _ in range(3))
             db.execute('BEGIN IMMEDIATE')
             try:
-                db.execute('INSERT INTO sessions(id,reader,start,created,expires) VALUES(?,?,?,?,?)',
-                           (sid, digest(reader), digest(start), now, now + self.lifetime))
+                db.execute('INSERT INTO sessions(id,reader,start,created,expires,measured) VALUES(?,?,?,?,?,?)',
+                           (sid, digest(reader), digest(start), now, now + self.lifetime, int(measure and self.metrics is not None)))
                 db.execute('INSERT INTO starts VALUES(?,?)', (source, now))
                 db.execute('COMMIT')
             except BaseException:
                 db.execute('ROLLBACK')
                 raise
+            if self.metrics:
+                self.metrics.session(sid, 'telegram_created', 1)
             return {'token': reader, 'telegram_url': f'https://t.me/{self.bot_name}?start={start}',
                     'expires_at': now + self.lifetime, 'state': 'connecting'}
 
@@ -134,13 +155,15 @@ class Sessions:
         with closing(open_store(str(self.path(row)))) as db:
             return load_workflow_result(db, telegram_approval.name)
 
-    def status(self, reader):
+    def status(self, reader, *, suppress_metrics=False):
         if not TOKEN.fullmatch(reader):
             raise Gone()
         with self.lock, closing(self.connect()) as db:
             row = db.execute('SELECT * FROM sessions WHERE reader=?', (digest(reader),)).fetchone()
             if row is None or row['expires'] <= self.clock():
                 raise Gone()
+            if suppress_metrics:
+                db.execute('UPDATE sessions SET measured=0 WHERE id=?', (row['id'],))
             result = self.result(row)
             state = result if result is not None else 'error' if row['failed'] else 'connecting'
             if result is None and not row['failed'] and row['chat']:
@@ -204,10 +227,22 @@ class Sessions:
         self.workers[row['id']] = (supervisor, worker)
         worker.start()
 
+    def record_usage(self, row):
+        if not self.metrics or not row['measured']:
+            return
+        if not row['metrics_mask'] & 1:
+            self.metrics.session(row['id'], 'telegram_created', 1)
+        if row['chat'] and not row['metrics_mask'] & 2:
+            self.metrics.session(row['id'], 'telegram_connected', 2)
+        result = self.result(row)
+        if result in ('approved', 'rejected') and not row['metrics_mask'] & 4:
+            self.metrics.session(row['id'], 'telegram_' + result, 4)
+
     def tick(self):
         now = self.clock()
         for row in self.rows():
             with self.lock:
+                self.record_usage(row)
                 if row['expires'] <= now:
                     worker = self.workers.get(row['id'])
                     if worker:
@@ -216,6 +251,7 @@ class Sessions:
                         if worker[1].is_alive():
                             continue
                         del self.workers[row['id']]
+                    self.record_usage(row)
                     if self.path(row).parent.exists():
                         shutil.rmtree(self.path(row).parent)
                     with closing(self.connect()) as db:
@@ -244,6 +280,8 @@ class Sessions:
                 log.warning('A demo notification could not be delivered. Retrying in 30 seconds.')
         with closing(self.connect()) as db:
             db.execute('DELETE FROM starts WHERE at <= ?', (now - 3600,))
+        if self.metrics:
+            self.metrics.prune()
         self.last_delivery = self.clock()
 
     def start(self):

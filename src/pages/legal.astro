@@ -19,7 +19,7 @@ import Header from '../components/Header.astro';
 		<Header />
 		<main>
 			<h1>Legal notice &amp; privacy</h1>
-			<p>Updated 13 September 2026. This notice covers zippergen.io, its interactive demo and demo-api.zippergen.io.</p>
+			<p>Updated 14 September 2026. This notice covers zippergen.io, its interactive demo and demo-api.zippergen.io.</p>
 
 			<p>This website is a personal academic project.</p>
 
@@ -98,13 +98,55 @@ import Header from '../components/Header.astro';
 				by the hosting providers.
 			</p>
 
-			<h2>Browser storage</h2>
+			<h2>Demo usage counts</h2>
+            <p>
+                When enabled, we count the steps reached in the walkthrough to understand
+                where it is difficult to follow. The browser sends only a fixed milestone
+                name and a random identifier for the current demo attempt to our Netcup
+                server. It sends no command text, message content, page address, referrer,
+                live-session token or Telegram identifier to the counting endpoint.
+            </p>
+            <p>
+                The attempt identifier and sent milestones stay in session storage for
+                up to 24 hours or until the tab is closed. Start over creates a new attempt.
+                The server retains event-specific hashes for duplicate detection for up to
+                24 hours. These temporary identifiers are not treated as anonymous data.
+                The long-term report contains only daily totals, kept for 90 days.
+                Counts describe attempts, not distinct people. Reloads within an attempt
+                do not intentionally count a milestone again.
+            </p>
+            <p>
+                For the live path, the server counts session creation, connection through
+                the bot's Start button and the final approval or rejection. This works
+                even if the webpage is closed. Duplicate-count flags stay with the live
+                session and expire with it. Refused live requests are counted separately.
+                Existing sessions from before measurement was enabled are not counted.
+            </p>
+            <p>
+                These counts are used only by the editor to improve this demo and plan
+                server capacity, on the basis of legitimate interests under Article 6(1)(f)
+                GDPR. They are not used for advertising, cross-site tracking or model training.
+                You can turn them off using “Usage counts” in the demo footer. The browser's
+                Do Not Track and Global Privacy Control signals also disable measurement.
+                Turning counts off stops further browser events and, when the page can reach
+                the server, counting of the current live session. Already aggregated totals
+                cannot be attributed back to you and are not removed.
+            </p>
+            <p>
+                To limit abuse of the counting endpoint, the server temporarily keeps a hash
+                of the source IP address in memory for up to one minute. This address is not
+                written to the usage tables. Ordinary hosting connection records follow the
+                hosting providers' policies. Cleanup runs during normal service operation
+                and resumes after a stopped service starts again.
+            </p>
+
+            <h2>Browser storage</h2>
 			<p>
 				The demo uses local storage to remember your progress, your current live-session
 				link and which completion animations have already played. This information can
 				remain after a server session expires. Start over resets the walkthrough and
 				forgets the current live session. Clear this site's data in your browser settings
-				to remove all locally saved information. Blocking local storage does not prevent
+				to remove all locally saved information, including your usage-count preference. Blocking local storage does not prevent
 				the basic walkthrough, but progress may not survive a reload.
 			</p>
 			<p>

@@ -229,3 +229,60 @@ sharing a public IP address share the hourly allowance.
 Limit messages distinguish the hourly allowance from full session capacity
 and give an estimated retry interval. Another visitor may take an available
 slot before that retry.
+
+
+## Demo usage counts
+
+The optional measurement service keeps daily totals in the existing private
+SQLite database. It is disabled by default. For an existing Netcup installation,
+follow [the metrics update](NETCUP-METRICS-v4.md). For a new installation, set
+`DEMO_METRICS_ENABLED=1` in the service environment and restart.
+
+On Netcup, from your administrator SSH terminal:
+
+```sh
+sudo -u zippergen-live /opt/zippergen-demo/venv/bin/python /opt/zippergen-demo/server/live_demo/metrics.py --days 7
+```
+
+Use `--days 30` for a longer period and `--json` for daily totals in JSON.
+There is no public reporting endpoint.
+
+| Count | Meaning |
+| --- | --- |
+| `demo_opened` | A measured attempt opened the walkthrough |
+| `first_command` | The attempt submitted its first nonempty shell command |
+| `deployment_reached` | The attempt started the simulated service |
+| `simulation_completed` | The attempt approved or rejected in the simulation |
+| `telegram_requested` | The attempt tried to create a live session |
+| `telegram_created` | A measured live session was created |
+| `telegram_connected` | Its visitor connected the Telegram bot |
+| `telegram_approved`, `telegram_rejected` | Its persisted workflow reached that outcome |
+| `github_clicked` | The attempt followed a GitHub link from the demo |
+| `live_capacity_refused`, `live_rate_refused`, `live_unavailable` | Requests refused for each reason |
+
+Browser milestones count once per attempt. Reloading keeps the attempt.
+Start over, a new tab or the 24-hour expiry starts another attempt. These are
+not unique people. Live counts use a separate session unit, so repeated live
+attempts can produce more sessions than browser attempts. Server completion is
+counted even if the page is closed. Events fall on the UTC day they occur.
+Do not treat ratios across a date boundary as exact cohort conversion rates.
+
+Only the production origin participates. Local previews and the browser test
+harness opt out. Visitors can use the footer control to opt out. Do Not Track
+and Global Privacy Control are respected. Counts can therefore understate use.
+Browser reports are untrusted and can also be spoofed. The limits reduce abuse,
+but these totals are a practical usage signal, not audited statistics.
+
+The browser sends a fixed event name and a temporary random attempt ID.
+Commands, prompts, live-session tokens and Telegram identities are not sent to
+the measurement endpoint. Event-specific receipt hashes expire after 24 hours.
+Daily aggregates expire after 90 days. Short-lived session flags prevent duplicate
+server counts across restarts and are removed with the existing session.
+No pre-update sessions are counted retroactively. Cleanup runs during normal
+service maintenance. See the website legal notice for the full disclosure.
+
+An unavailable counting endpoint does not block the walkthrough. Disabling the
+setting stops collection and hides the footer control after a reload. Existing
+aggregates remain in the private database. Avoid repeatedly enabling collection
+for tests on the public site, since completed counts cannot be attributed back
+to an individual visitor for removal.

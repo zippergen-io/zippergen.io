@@ -147,7 +147,7 @@ def main():
                     }''')
                     assert decoded == page.locator('#telegram-link').get_attribute('href')
                     assert parse_qs(urlsplit(decoded).query)['start'][0] != start
-                page.route('**/api/session', lambda route: route.fulfill(status=410, json={'error': 'expired'}))
+                page.route('**/api/session*', lambda route: route.fulfill(status=410, json={'error': 'expired'}))
                 page.locator('#live-dialog button[type=submit]').click()
                 page.locator('#resume-live').click()
                 expect(page.locator('#live-status')).to_contain_text('expired')

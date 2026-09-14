@@ -1,3 +1,4 @@
+import { count, newCountedAttempt } from './metrics.js';
 import { renderTelegram, renderCompletion, initTelegram, resetTelegram, liveReview } from './telegram.js';
 
 // A finite command simulation. Nothing here invokes a shell, model, or service.
@@ -191,6 +192,9 @@ function runCommand(raw) {
   if (!data) return;
   const command = raw.trim().replace(/\s+/g, ' ');
   if (!command || state.agent) return;
+  const previousService = state.service;
+  const previousDecision = state.decision;
+  count('first_command');
   input.value = '';
   if (command === 'clear') {
     state.entries = [];
@@ -313,6 +317,8 @@ function runCommand(raw) {
   } else {
     add(command.slice(0, 500), 'This command is not part of the simulation. Type help for the available commands.');
   }
+  if (previousService === 'idle' && state.service === 'running') count('deployment_reached');
+  if (previousDecision === null && state.decision !== null) count('simulation_completed');
   render({ focus: true });
 }
 function showInformation(title, body) {
@@ -372,6 +378,7 @@ suggestions.addEventListener('click', event => {
 document.querySelector('#reset').addEventListener('click', () => {
   if (!data) return;
   state = fresh();
+  newCountedAttempt();
   resetTelegram();
   input.value = '';
   render({ focus: true });

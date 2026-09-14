@@ -24,7 +24,7 @@ with sync_playwright() as p:
         ''')
         context.route('**/live-config.json', lambda route: route.fulfill(json={'api_base': 'https://completion-test.invalid'}))
         server_state = {'state': 'waiting'}
-        context.route('https://completion-test.invalid/api/session', lambda route: route.fulfill(json={
+        context.route('https://completion-test.invalid/api/session*', lambda route: route.fulfill(json={
             'state': server_state['state'], 'expires_at': 2000000000, 'available': True,
         }))
         page = context.new_page()

@@ -1,3 +1,4 @@
+import { count, initMetrics, measurementQuery } from './metrics.js';
 // The preview changes only simulated shell state. Live decisions arrive only from the API.
 let apiBase = null;
 let liveToken = null;
@@ -138,7 +139,7 @@ function remember() {
 }
 
 async function api(path, options = {}) {
-  const response = await fetch(apiBase + path, { ...options, cache: 'no-store', credentials: 'omit', signal: AbortSignal.timeout(12000) });
+  const response = await fetch(apiBase + path + measurementQuery(), { ...options, cache: 'no-store', credentials: 'omit', signal: AbortSignal.timeout(12000) });
   const body = await response.json();
   if (!response.ok) throw Object.assign(new Error(body.error || 'The live demo is unavailable.'), { status: response.status });
   return body;
@@ -222,6 +223,7 @@ async function startLive() {
     liveStatus.textContent = 'The live server is not connected to this preview yet. You can approve or reject in the simulated Telegram view.';
     return;
   }
+  count('telegram_requested');
   liveBusy = true;
   const generation = requestGeneration;
   changed();
@@ -300,6 +302,7 @@ export async function initTelegram() {
     refreshLive();
   });
   window.addEventListener('focus', refreshLive);
+  document.addEventListener('demo-measurement-change', refreshLive);
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) clearConfetti();
     else refreshLive();
@@ -321,6 +324,7 @@ export async function initTelegram() {
       apiBase = url.href.replace(/\/$/, '');
     }
   } catch { /* The default simulated journey works without the backend. */ }
+  initMetrics(apiBase);
   document.querySelector('#try-live').hidden = !apiBase || liveReview().active;
   document.querySelector('#live-privacy').hidden = !apiBase || liveReview().active;
   document.querySelector('#live-capacity').hidden = !apiBase || liveReview().active;
