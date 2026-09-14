@@ -101,6 +101,7 @@ function renderProgress() {
 }
 function render({ focus = false } = {}) {
   const latest = state.entries.at(-1);
+  document.querySelector('main').classList.toggle('code-view', latest?.kind === 'code' && !state.agent);
   // The screen is fixed. Replace its result instead of appending a transcript.
   // Keep command history in state for the arrow keys and refresh.
   if (latest) {

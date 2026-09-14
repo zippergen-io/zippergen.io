@@ -208,3 +208,10 @@ footer nav { flex-shrink: 0; }
 #completion p { margin: 0 0 24px; }
 
 #live-capacity, #live-privacy { margin-top: 12px; }
+
+/* Keep code readable even when the browser is short or its text is enlarged. */
+main.code-view { height: auto; min-height: 100svh; }
+.code-view .workspace { min-height: auto; }
+.code-view .controls { height: auto; min-height: 72px; padding-bottom: 20px; }
+.code-view .result-pane { flex: none; height: clamp(460px, 65svh, 680px); }
+.code-view .output { padding-bottom: 8px; }

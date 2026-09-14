@@ -199,6 +199,15 @@ def main():
                     expect(page.locator('pre.code')).to_be_visible()
                     expect(last()).to_contain_text('if approved @ Mailbox')
 
+        for width, height in [(390, 667), (320, 568), (1280, 720), (844, 390)]:
+            page.set_viewport_size({'width': width, 'height': height})
+            page.get_by_role('button', name='Start over').click()
+            create()
+            run('zg show')
+            lines = page.locator('#output').evaluate('(e) => e.clientHeight / parseFloat(getComputedStyle(e).lineHeight)')
+            assert lines >= 12, (width, height, lines)
+            assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+
         fallback = context.new_page()
         fallback.add_init_script("Object.defineProperty(window, 'localStorage', {get() {throw new Error('blocked')}})")
         fallback.goto(args.url)
