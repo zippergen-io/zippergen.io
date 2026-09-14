@@ -68,7 +68,7 @@ function choices() {
   if (state.service === 'stopped') return [state.decision === null ? 'The approval is saved. Start the service to continue.' : 'The service is stopped. Your decision is recorded.', [commandButton('zg deploy start'), commandButton('zg deploy tasks'), commandButton('zg deploy status')]];
   if (state.decision !== null) {
     return ['Try the project yourself, or explore what happened.', [
-      ...(state.entries.at(-1)?.command.startsWith('zg deploy approve ') ? [] : ['<a href="./approval-example.zip" download>Download the example</a>']),
+      ...(state.entries.at(-1)?.command.startsWith('zg deploy approve ') ? [] : ['<a href="https://github.com/zippergen-io/zippergen/blob/main/examples/email_approval.py" target="_blank" rel="noopener">View the example on GitHub</a>']),
       commandButton('zg deploy logs'),
       '<button type="button" data-replay class="secondary">Try the other decision</button>',
     ]];
@@ -105,7 +105,7 @@ function render({ focus = false } = {}) {
   // Keep command history in state for the arrow keys and refresh.
   if (latest) {
     const body = latest.kind === 'code' ? `<pre class="code" tabindex="0" aria-label="Python code"><code>${highlight(latest.text)}</code></pre>` : `<pre>${escape(latest.text)}</pre>`;
-    const download = latest.kind === 'download' ? '<a class="download" href="./approval-example.zip" download>Download the runnable example</a>' : '';
+    const download = latest.kind === 'download' ? '<a class="download" href="https://github.com/zippergen-io/zippergen/blob/main/examples/email_approval.py" target="_blank" rel="noopener">View the example on GitHub</a>' : '';
     output.innerHTML = `<div class="entry">${body}${download}</div>`;
   } else {
     output.innerHTML = `<p class="note">${state.workflow ? 'Run a command to inspect this project.' : 'Build a workflow that drafts replies and waits for your approval.'}</p>`;
@@ -234,7 +234,7 @@ function runCommand(raw) {
   } else if (command === 'zg config') {
     if (requireWorkflow(command)) {
       state.configured = true;
-      add(command, 'Model       Fixed example draft    No model call\nRequests    Local folder           mailbox/ (simulated)\nApproval    Telegram preview       Simulated\nDelivery    Example reply          No email sent', { note: 'These are the demo defaults. The downloadable project uses a mock model and terminal approval. Telegram is selected through connector configuration.' });
+      add(command, 'Model       Fixed example draft    No model call\nRequests    Local folder           mailbox/ (simulated)\nApproval    Telegram preview       Simulated\nDelivery    Example reply          No email sent', { note: 'These are the demo defaults. The example project uses a mock model and terminal approval. Telegram is selected through connector configuration.' });
     }
   } else if (command === 'zg deploy') {
     if (requireWorkflow(command)) {
@@ -282,7 +282,7 @@ function runCommand(raw) {
       else {
         const yes = command.endsWith('--yes');
         state.decision = yes;
-        add(command, `${yes ? 'Approved. Reply sent (simulated).' : 'Rejected. No reply sent.'}\n01.txt marked as handled. Waiting for the next request.`, { note: 'You have gone from a prompt to a running workflow. The download includes the same code and a scripted reply.' });
+        add(command, `${yes ? 'Approved. Reply sent (simulated).' : 'Rejected. No reply sent.'}\n01.txt marked as handled. Waiting for the next request.`, { note: 'You have gone from a prompt to a running workflow. You can explore the source on GitHub and try your own workflow.' });
       }
     }
   } else if (command === 'zg deploy logs') {
@@ -305,7 +305,7 @@ function showInformation(title, body) {
   document.querySelector('#information').showModal();
 }
 function showAbout() {
-  showInformation('About this demo', '<p>This is an interactive simulation of a ZipperGen project.</p><p>The Python code and participant views are real. The coding session and CLI output are illustrative. No commands run on your machine. No model is called. Approve and reject lead to different outcomes. The Telegram preview is simulated. When available, the optional live step creates a separate ZipperGen run on our server and waits for your real Telegram approval.</p><p>Demo progress stays in this browser when storage is available.</p><a href="./approval-example.zip" download>Download the runnable example</a>');
+  showInformation('About this demo', '<p>This is an interactive simulation of a ZipperGen project.</p><p>The Python code and participant views are real. The coding session and CLI output are illustrative. No commands run on your machine. No model is called. Approve and reject lead to different outcomes. The Telegram preview is simulated. When available, the optional live step creates a separate ZipperGen run on our server and waits for your real Telegram approval.</p><p>Demo progress stays in this browser when storage is available.</p><a href="https://github.com/zippergen-io/zippergen/blob/main/examples/email_approval.py" target="_blank" rel="noopener">View the example on GitHub</a>');
 }
 function replay() {
   if (state.decision === null) return;
@@ -350,7 +350,7 @@ suggestions.addEventListener('click', event => {
   if (!button) return;
   if ('command' in button.dataset) runCommand(button.dataset.command);
   else if ('replay' in button.dataset) replay();
-  else if ('setup' in button.dataset) showInformation('Setup in your project', '<p>The downloadable example works with a mock model and terminal approval. Telegram delivery uses your own bot and private chat.</p><pre>zg provider configure approval-bot telegram\nzg provider set-credential approval-bot\nzg connector configure approval-chat approval-bot\nzg connector assign Mailbox approval-chat\nzg config</pre><p>Run these in your own terminal. Enter the token only in the hidden credential prompt. The live website example uses our demo bot.</p><details><summary>Use a real model later</summary><pre>zg provider configure writer-provider openai\nzg provider set-credential writer-provider\nzg model configure writer writer-provider YOUR_MODEL\nzg model assign Writer writer</pre><p>Replace YOUR_MODEL with a model available to your account. This is optional and is not used by the public demo.</p></details>');
+  else if ('setup' in button.dataset) showInformation('Setup in your project', '<p>The example workflow can work with a mock model and terminal approval. Telegram delivery uses your own bot and private chat.</p><pre>zg provider configure approval-bot telegram\nzg provider set-credential approval-bot\nzg connector configure approval-chat approval-bot\nzg connector assign Mailbox approval-chat\nzg config</pre><p>Run these in your own terminal. Enter the token only in the hidden credential prompt. The live website example uses our demo bot.</p><details><summary>Use a real model later</summary><pre>zg provider configure writer-provider openai\nzg provider set-credential writer-provider\nzg model configure writer writer-provider YOUR_MODEL\nzg model assign Writer writer</pre><p>Replace YOUR_MODEL with a model available to your account. This is optional and is not used by the public demo.</p></details>');
 });
 document.querySelector('#reset').addEventListener('click', () => {
   if (!data) return;
@@ -385,5 +385,5 @@ try {
   render();
   initTelegram();
 } catch {
-  output.innerHTML = '<p>The example could not load. Please reload the page.</p><p><a href="./approval-example.zip" download>Download the example instead</a></p>';
+  output.innerHTML = '<p>The example could not load. Please reload the page.</p><p><a href="https://github.com/zippergen-io/zippergen/blob/main/examples/email_approval.py" target="_blank" rel="noopener">View the example on GitHub</a></p>';
 }

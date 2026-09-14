@@ -1,7 +1,6 @@
 """Check the simulated shell with Playwright against a served website build."""
 import argparse
 import re
-import zipfile
 from pathlib import Path
 from playwright.sync_api import expect, sync_playwright
 
@@ -137,11 +136,7 @@ def main():
         run('zg deploy logs')
         expect(last()).to_contain_text('Simulated send completed')
         shot('07-outcome')
-        with page.expect_download() as info:
-            page.get_by_role('link', name='Download the example', exact=True).click()
-        with zipfile.ZipFile(info.value.path()) as archive:
-            assert 'approval-example/workflow.py' in archive.namelist()
-            assert 'approval-example/prompt.txt' in archive.namelist()
+        expect(page.get_by_role('link', name='View the example on GitHub', exact=True)).to_have_attribute('href', 'https://github.com/zippergen-io/zippergen/blob/main/examples/email_approval.py')
         run('clear')
         expect(page.locator('.entry')).to_have_count(0)
         run('zg deploy status')
@@ -217,7 +212,7 @@ def main():
         expect(broken.get_by_text('The example could not load.', exact=False)).to_be_visible()
         assert not errors, errors
         browser.close()
-    print('Passed: fixed command position, one output at a time, truthful milestones including skipped inspection,  both coding agents with click/Enter continuation, global/local views, configuration, deployment, both decisions, stop/restart before and after completion, duplicate approval, persistence, command history, safe unsupported input, download, reset, mobile layouts, local font, and unavailable storage/content.')
+    print('Passed: fixed command position, one output at a time, truthful milestones including skipped inspection,  both coding agents with click/Enter continuation, global/local views, configuration, deployment, both decisions, stop/restart before and after completion, duplicate approval, persistence, command history, safe unsupported input, GitHub example link, reset, mobile layouts, local font, and unavailable storage/content.')
 
 
 if __name__ == '__main__':

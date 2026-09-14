@@ -39,15 +39,15 @@ with sync_playwright() as p:
         page.evaluate(event)
         expect(page.locator('#live-title')).to_have_text('Your workflow is complete.')
         expect(page.locator('#live-status')).to_contain_text('has completed')
-        expect(page.get_by_role('link', name='Try it with your own workflow')).to_be_visible()
-        assert page.locator('#live-next-step').get_attribute('href') == './approval-example.zip'
+        expect(page.get_by_role('link', name='Get started on GitHub')).to_be_visible()
+        assert page.locator('#live-next-step').get_attribute('href') == 'https://github.com/zippergen-io/zippergen#quick-start'
         pieces = 60 if outcome == 'approved' and motion == 'no-preference' else 0
         assert page.evaluate('window.confettiPieces') == 0
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
         page.locator('#live-dialog button[type=submit]').click()
         expect(page.locator('#completion')).to_be_visible()
         expect(page.locator('#completion-message')).to_contain_text('Telegram')
-        expect(page.get_by_role('link', name='Try it with your own workflow')).to_be_visible()
+        expect(page.get_by_role('link', name='Get started on GitHub')).to_be_visible()
         expect(page.locator('#live-confetti i')).to_have_count(pieces)
         assert page.locator('#live-confetti').evaluate('(e) => !e.closest("dialog")')
         page.locator('#resume-live').click()
