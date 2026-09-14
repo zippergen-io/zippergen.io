@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="no-referrer">
-  <meta name="theme-color" content="#272b33">
+  <meta name="theme-color" content="#f5f4f0">
   <title>Try ZipperGen · A simulated shell</title>
   <meta name="description" content="Try ZipperGen in a simulated shell. Ask a coding agent for a workflow, inspect its participants, and try an approval and a restart.">
   <link rel="canonical" href="https://zippergen.io/demo/">
@@ -23,15 +23,18 @@
     </header>
     <div class="workspace">
       <section class="terminal" aria-label="Simulated terminal">
+        <div class="step-intro">
+          <h2 id="step-title">Project</h2>
+          <p id="hint" class="hint"></p>
+        </div>
         <form id="command-form" autocomplete="off">
           <label class="prompt" id="input-prefix" for="command"><span class="directory">~/approval-demo</span> <span class="dollar">$</span></label>
           <input id="command" name="command" maxlength="500" aria-label="Shell command" placeholder="Type a command, or choose below" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off">
-          <button type="submit" aria-label="Run command" title="Run command">Run ↵</button>
+          <button type="submit" aria-label="Run command" title="Run command">Run <svg class="enter-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="M13 3v6H3m4-4L3 9l4 4" /></svg></button>
         </form>
         <div class="controls" id="controls" hidden>
           <div id="suggestions" class="suggestions" aria-label="Suggested commands"></div>
           <button type="button" id="resume-live" hidden>View your live run</button>
-          <p id="hint" class="hint"></p>
         </div>
         <div class="result-pane">
           <div class="output-heading"><span id="result-label">Output</span><span id="result-command"></span></div>
@@ -61,7 +64,7 @@
               <textarea id="agent-prompt" aria-label="Example request to the coding agent" readonly></textarea>
             </form>
           </div>
-          <details id="step-note" hidden><summary>About this step</summary><p></p></details>
+          <div id="step-note" hidden><p></p></div>
         </div>
       </section>
       <aside class="progress" aria-label="Journey to deployment">

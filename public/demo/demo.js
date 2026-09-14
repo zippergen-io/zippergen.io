@@ -59,7 +59,7 @@ function commandButton(command, label = command, secondary = false) {
 }
 function choices() {
   if (!state.initialized) return ['Start with an empty project.', [commandButton('zg init')]];
-  if (state.agent) return ['Or press Enter.', ['<button type="submit" form="agent-form">Send this request ↵</button>']];
+  if (state.agent) return ['Read the request below, then send it with the button or Enter.', ['<button type="submit" form="agent-form" class="enter-button">Send this request <svg class="enter-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="M13 3v6H3m4-4L3 9l4 4" /></svg></button>']];
   if (liveReview().active && state.taskSeen) return [
     ['approved', 'rejected'].includes(liveReview().state) ? 'Your Telegram decision is saved. Start over to try a new request.' : 'Continue in Telegram, or open your live run.',
     [],
@@ -96,7 +96,7 @@ function renderProgress() {
   document.querySelector('#milestones').innerHTML = milestones.map(([label, done], index) => {
     const skipped = !done && index < furthest;
     const status = done ? 'complete' : index === current ? 'next' : skipped ? 'not explored' : 'pending';
-    return `<li class="milestone${done ? ' done' : ''}" data-milestone="${index}" aria-label="${label}: ${status}"${index === current ? ' aria-current="step"' : ''}><span class="desktop-label">${label}</span><span class="mobile-label" aria-hidden="true">${['Init', 'Write', 'Read', 'Setup', 'Run', 'Decide'][index]}</span>${index === current ? '<small>Next</small>' : skipped ? '<small>Not explored</small>' : ''}</li>`;
+    return `<li class="milestone${done ? ' done' : ''}" data-milestone="${index}" aria-label="${label}: ${status}"${index === current ? ' aria-current="step"' : ''}><span class="desktop-label">${label}</span><span class="mobile-label" aria-hidden="true">${['Init', 'Write', 'Read', 'Setup', 'Run', 'Decide'][index]}</span>${skipped ? '<small>Not explored</small>' : ''}</li>`;
   }).join('');
 }
 function render({ focus = false } = {}) {
@@ -118,7 +118,6 @@ function render({ focus = false } = {}) {
   document.querySelector('#result-label').textContent = telegramVisible ? (liveReview().active ? 'Telegram' : 'Telegram preview') : state.agent ? 'Request' : latest?.speaker === 'note' ? 'About' : !latest ? 'Example' : 'Output';
   const stepNote = document.querySelector('#step-note');
   stepNote.hidden = Boolean(state.agent) || completionVisible || !latest?.note;
-  stepNote.open = false;
   stepNote.querySelector('p').textContent = latest?.note || '';
   document.querySelector('#result-command').textContent = latest ? latest.speaker === 'shell' ? latest.command : latest.speaker === 'agent' ? 'Coding agent' : 'Demo' : '';
   if (telegramVisible) document.querySelector('#result-command').textContent = liveReview().active ? 'Live on our demo server' : 'Simulated';
@@ -128,9 +127,17 @@ function render({ focus = false } = {}) {
   }
   output.scrollTop = 0;
   const [hint, buttons] = choices();
+  document.querySelector('#step-title').textContent = state.agent ? 'Write the request'
+    : completionVisible ? 'Completed' : state.service === 'stopped' ? 'Resume the service'
+    : state.service === 'running' ? 'Review the request' : state.configured ? 'Setup'
+    : state.inspected ? 'Inspect the workflow' : state.workflow ? 'Workflow'
+    : state.initialized ? 'Choose your coding agent' : 'Create a project';
   document.querySelector('#hint').textContent = hint;
   document.querySelector('#hint').hidden = !hint;
   suggestions.innerHTML = buttons.join('');
+  const hasNextCommand = !state.initialized || state.agent ||
+    (state.workflow && state.decision === null && (!state.taskSeen || state.service === 'stopped'));
+  if (hasNextCommand) suggestions.firstElementChild?.setAttribute('data-recommended', '');
   suggestions.hidden = liveReview().active;
   document.querySelector('#resume-live').hidden = !liveReview().active;
   document.querySelector('.terminal').classList.toggle('agent-mode', Boolean(state.agent));
@@ -138,6 +145,7 @@ function render({ focus = false } = {}) {
   else if (input.disabled) input.value = '';
   input.disabled = Boolean(state.agent);
   document.querySelector('#command-form button').disabled = Boolean(state.agent);
+  updateCommandPriority();
   document.querySelector('#agent-form').hidden = !state.agent;
   document.querySelector('#controls').hidden = false;
   if (state.agent) {
@@ -152,6 +160,13 @@ function render({ focus = false } = {}) {
   historyIndex = commandHistory().length;
   if (focus && !state.agent && !matchMedia('(max-width: 700px)').matches) input.focus({ preventScroll: true });
   announcement.textContent = latest ? `${latest.kind === 'code' ? 'Code displayed.' : latest.text.slice(0, 240)} ${hint}` : hint;
+}
+function updateCommandPriority() {
+  const hasCommand = !input.disabled && Boolean(input.value.trim());
+  document.querySelector('#command-form button').classList.toggle('primary', hasCommand);
+  for (const button of suggestions.children) {
+    button.classList.toggle('primary', !hasCommand && button.hasAttribute('data-recommended'));
+  }
 }
 function commandHistory() { return state.entries.filter(entry => entry.speaker === 'shell').map(entry => entry.command); }
 function requireWorkflow(command) {
@@ -341,6 +356,7 @@ document.querySelector('#agent-form').addEventListener('submit', event => {
   });
   render();
   input.value = 'zg show';
+  updateCommandPriority();
   // Keep the next step keyboard-accessible without opening the mobile keyboard.
   const next = matchMedia('(max-width: 700px)').matches
     ? suggestions.querySelector('[data-command="zg show"]') : input;
@@ -366,6 +382,7 @@ document.querySelector('#help').addEventListener('click', () => {
     showInformation('Commands', '<p>Send the example request to continue. You can then type shell commands or choose one of the suggestions.</p>');
   } else runCommand('help');
 });
+input.addEventListener('input', updateCommandPriority);
 input.addEventListener('keydown', event => {
   const history = commandHistory();
   if (event.key === 'ArrowUp') {
@@ -377,6 +394,7 @@ input.addEventListener('keydown', event => {
     historyIndex = Math.min(history.length, historyIndex + 1);
     input.value = history[historyIndex] || '';
   } else if (event.key === 'Escape') input.value = '';
+  updateCommandPriority();
 });
 
 try {
