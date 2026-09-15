@@ -7,7 +7,7 @@ import Header from '../components/Header.astro';
 <!doctype html>
 <html lang="en">
 	<head>
-		<BaseHead title="Legal & Privacy | ZipperGen" description="Legal notice and privacy information for ZipperGen and its interactive demo" />
+		<BaseHead title="Legal & Privacy | ZipperGen" description="Legal notice and privacy information for ZipperGen, its Google connections and its interactive demo" />
 		<style>
 			h2 {
 				margin-top: 0.9em;
@@ -19,7 +19,7 @@ import Header from '../components/Header.astro';
 		<Header />
 		<main>
 			<h1>Legal notice &amp; privacy</h1>
-			<p>Updated 14 September 2026. This notice covers zippergen.io, its interactive demo and demo-api.zippergen.io.</p>
+			<p>Updated 15 September 2026. This notice covers zippergen.io, its interactive demo, demo-api.zippergen.io and the ZipperGen Google OAuth application operated by the editor.</p>
 
 			<p>This website is a personal academic project.</p>
 
@@ -50,6 +50,61 @@ import Header from '../components/Header.astro';
 				Phone: +49 721 7540755 0<br />
 				<a href="https://www.netcup.com/en/contact/legal-notice">Netcup legal notice</a>
 			</address>
+
+			<h2 id="google-privacy">Google connections in ZipperGen</h2>
+			<p>
+				ZipperGen can connect to Google services after you authorize access through
+				Google. The permissions depend on the workflow you configure. Google handles
+				sign-in. ZipperGen receives access and refresh tokens, not your Google password.
+				The public interactive demo does not connect to your Google account.
+			</p>
+			<p>
+				Depending on the permissions granted, a workflow can read Gmail message content,
+				senders, recipients, subjects and labels, create drafts, send replies and mark
+				messages as processed. It can read or update Google Sheets cell values and read
+				spreadsheet titles. It can also read Google Calendar event details and create
+				events. Only the services needed for the configured workflow are requested.
+				These data are used to carry out the workflow you authorize, such as recording
+				an incoming request, preparing a reply or arranging an appointment.
+			</p>
+			<p>
+				The workflow runs on the computer or server chosen by its operator. OAuth
+				credentials are stored there in files with restricted access permissions.
+				Google requests use HTTPS. Workflow inputs, action results and generated output
+				may be saved there for recovery and inspection. There is no automatic 30-minute
+				deletion for these workflows. Stored credentials and workflow records remain
+				until the operator removes them. Backup retention depends on that installation.
+				Running your own installation does not automatically send these data to the
+				ZipperGen website or public demo server.
+			</p>
+			<p>
+				A workflow may send selected data to services you have chosen, for example to
+				a model provider to prepare a reply, or to a messaging service for an approval.
+				The operator must explain which providers receive which data and obtain your
+				consent before enabling those transfers. Those providers may process data outside
+				the European Economic Area and apply their own retention policies. An OAuth
+				permission alone does not authorize undisclosed sharing. We do not sell Google
+				user data or use it for advertising or training general-purpose AI models.
+				Operators must choose provider settings and terms that preserve these limits.
+			</p>
+			<p>
+				Our use of Google user data follows the
+				<a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>
+				and its Limited Use requirements. The
+				<a href="https://developers.google.com/workspace/workspace-api-user-data-developer-policy">Google Workspace user data policy</a>
+				also applies to the connected Workspace services.
+			</p>
+			<p>
+				You can revoke access in your
+				<a href="https://myaccount.google.com/connections">Google Account connections</a>.
+				Revocation stops future authorized access but does not delete records already
+				saved by a workflow or messages and files held by other services. For an
+				editor-operated workflow, contact
+				<a href="mailto:bollig@lmf.cnrs.fr">bollig@lmf.cnrs.fr</a> to request deletion.
+				For your own installation, stop the workflow and remove its saved credentials,
+				workflow records and any relevant backups. Other operators are responsible for
+				their installations and must provide their own contact and privacy information.
+			</p>
 
 			<h2 id="demo-privacy">Privacy in the demo</h2>
 			<p>
