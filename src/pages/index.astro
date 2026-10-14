@@ -33,6 +33,28 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 				</p>
 			</section>
 
+			<section class="crew-preview" aria-labelledby="crew-title">
+				<a class="crew-image" href="https://github.com/zippergen-io/zippercrew">
+					<img
+						src="/images/zippercrew-office.png"
+						alt="ZipperCrew's pixel office, with two reviewers and a worker handing the decision back to you"
+						width="2880"
+						height="2000"
+						loading="lazy"
+						decoding="async"
+					/>
+				</a>
+				<div>
+					<p class="crew-eyebrow">Built with ZipperGen · Early preview</p>
+					<h2 id="crew-title">Meet ZipperCrew</h2>
+					<p class="crew-copy">
+						Give a task to an AI team in a pixel office. Watch the work and
+						reviews, then decide what ships.
+					</p>
+					<a class="crew-link" href="https://github.com/zippergen-io/zippercrew">Explore ZipperCrew <span aria-hidden="true">→</span></a>
+				</div>
+			</section>
+
 			<section class="peek">
 				<h2>Start with an approval workflow</h2>
 				<p>
@@ -156,6 +178,7 @@ zg deploy logs`} />
 	}
 
 	.hero,
+	.crew-preview,
 	.peek,
 	.operations,
 	.authoring,
@@ -190,6 +213,67 @@ zg deploy logs`} />
 
 	.hero-video {
 		margin: 0.75rem 0 0;
+	}
+
+	.crew-preview {
+		display: grid;
+		grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+		align-items: center;
+		gap: 1.5rem;
+		padding: 1.5rem 0;
+		border-block: 1px solid rgb(var(--gray-light));
+	}
+
+	.crew-image {
+		display: block;
+		border-radius: 8px;
+		overflow: hidden;
+	}
+
+	.crew-image img {
+		display: block;
+		width: 100%;
+		height: auto;
+		image-rendering: pixelated;
+	}
+
+	.crew-eyebrow {
+		margin: 0 0 0.4rem;
+		font-size: 0.8rem;
+		color: #59616f;
+	}
+
+	.crew-preview h2 {
+		margin-bottom: 0.5rem;
+	}
+
+	.crew-copy {
+		margin: 0 0 0.75rem;
+		font-size: 1rem;
+		line-height: 1.55;
+	}
+
+	.crew-link {
+		font-size: 1rem;
+		font-weight: 600;
+		color: var(--accent-dark);
+		text-underline-offset: 3px;
+	}
+
+	.crew-preview a:focus-visible {
+		outline: 2px solid var(--accent-dark);
+		outline-offset: 4px;
+	}
+
+	@media (max-width: 600px) {
+		.crew-preview {
+			grid-template-columns: 1fr;
+			gap: 1rem;
+		}
+
+		.crew-image {
+			width: min(100%, 320px);
+		}
 	}
 
 	.landing h2 {
