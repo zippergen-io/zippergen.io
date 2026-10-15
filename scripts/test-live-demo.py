@@ -35,7 +35,7 @@ def main():
     args = parser.parse_args()
     args.screenshots.mkdir(parents=True, exist_ok=True)
     origin = '{0.scheme}://{0.netloc}'.format(urlsplit(args.url))
-    service = Sessions(args.state, Bot(), 'zippergen_demo_bot')
+    service = Sessions(args.state, Bot(), 'zippergen_demo_bot', starts_per_hour=8)
     service.healthy = True
     service.last_poll = service.last_delivery = time.time()
     http = make_server('127.0.0.1', 0, API(service, [origin]), handler_class=QuietHandler)
@@ -119,6 +119,30 @@ def main():
                 page.get_by_role('button', name='Run command', exact=True).click()
                 assert page.evaluate("JSON.parse(localStorage.getItem('zippergen-shell-demo-v1')).decision") is None
                 assert service.status(reader)['state'] == expected
+                # Both completion surfaces can create a fresh run without replaying setup.
+                shell_before = page.evaluate("localStorage.getItem('zippergen-shell-demo-v1')")
+                expect(page.locator('#restart-live')).to_be_visible()
+                page.screenshot(path=str(args.screenshots / f'live-restart-{index}.png'))
+                if yes:
+                    page.locator('#resume-live').click()
+                    expect(page.locator('#new-live-session')).to_be_visible()
+                    restart = page.locator('#new-live-session')
+                else:
+                    restart = page.locator('#restart-live')
+                posts = []
+                page.on('request', lambda req: posts.append(req.url) if req.method == 'POST' and '/api/sessions' in req.url else None)
+                restart.evaluate('(button) => { button.click(); button.click(); }')
+                expect(page.locator('#telegram-link')).to_be_visible()
+                fresh_reader = parse_qs(urlsplit(page.url).fragment)['live'][0]
+                assert fresh_reader != reader
+                assert service.status(fresh_reader)['state'] == 'connecting'
+                assert service.status(reader)['state'] == expected
+                assert len(posts) == 1
+                assert page.evaluate("localStorage.getItem('zippergen-shell-demo-v1')") == shell_before
+                expect(page.locator('#new-live-session')).to_be_hidden()
+                expect(page.locator('#completion')).to_be_hidden()
+                expect(page.locator('#telegram-qr-code')).to_be_hidden()
+                page.locator('#live-dialog button[type=submit]').click()
                 page.get_by_role('button', name='Start over', exact=True).click()
                 assert page.evaluate("localStorage.getItem('zippergen-live-demo-v1')") is None
                 assert not urlsplit(page.url).fragment

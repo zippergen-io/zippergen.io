@@ -43,7 +43,8 @@ terminal. Skipped inspection stays marked as not explored.
 
 Versioned browser storage keeps progress when available. Start over clears the
 simulation and forgets the current live session, so the next live attempt asks
-for a new approval. Earlier server sessions expire after 30 minutes.
+for a new approval. After a live run finishes, “Start another live run” creates
+a fresh Telegram approval directly, without repeating the simulated setup. Earlier server sessions expire after 30 minutes.
 The downloadable project contains the real workflow.
 
 The setup summary distinguishes the fixed browser draft and simulated Telegram

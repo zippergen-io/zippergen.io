@@ -238,3 +238,7 @@ main.code-view { height: auto; }
 
 #command-form > button.primary { background: #abd4cd; color: #202a2b; }
 #command-form > button.primary:hover { background: #c1e2dc; color: #202a2b; text-decoration: none; }
+
+.completion-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px; }
+.live-restart { padding: 9px 14px; border: 1px solid var(--teal); border-radius: 5px; color: var(--teal); font-size: var(--small-size); }
+.live-restart:hover:not(:disabled) { color: var(--teal); background: #eef4f1; text-decoration: none; }

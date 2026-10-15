@@ -46,7 +46,10 @@
             <section id="completion" aria-labelledby="completion-title" hidden>
               <h2 id="completion-title">Your workflow is complete.</h2>
               <p id="completion-message"></p>
-              <a id="live-next-step" class="text-link" href="https://github.com/zippergen-io/zippergen#quick-start" target="_blank" rel="noopener">Get started on GitHub</a>
+              <div class="completion-actions">
+                <button type="button" id="restart-live" class="live-restart" hidden>Start another live run</button>
+                <a id="live-next-step" class="text-link" href="https://github.com/zippergen-io/zippergen#quick-start" target="_blank" rel="noopener">Get started on GitHub</a>
+              </div>
             </section>
             <section id="telegram-preview" class="telegram" aria-label="Simulated Telegram conversation" hidden>
               <p class="telegram-name">ZipperGen demo bot</p>
@@ -84,7 +87,7 @@
       <p id="telegram-qr-help" class="note">Scan with your camera, then press Start in Telegram.</p>
     </details>
     <p id="live-details" class="note"></p>
-    <button type="button" id="new-live-session" class="text-link" hidden>Start a new live session</button>
+    <button type="button" id="new-live-session" class="live-restart" hidden>Start another live run</button>
   </dialog>
   <dialog id="information" aria-labelledby="information-title">
     <form method="dialog"><h2 id="information-title"></h2><button type="submit">Close</button></form>

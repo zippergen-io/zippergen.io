@@ -12,6 +12,7 @@ const liveStatus = document.querySelector('#live-status');
 const liveLink = document.querySelector('#telegram-link');
 const liveDetails = document.querySelector('#live-details');
 const liveKey = 'zippergen-live-demo-v1';
+const finishedStates = ['approved', 'rejected', 'error', 'expired'];
 const qrDetails = document.querySelector('#telegram-qr');
 const qrCanvas = document.querySelector('#telegram-qr-code');
 const qrHelp = document.querySelector('#telegram-qr-help');
@@ -182,12 +183,12 @@ async function poll() {
       continuing: 'Your decision is saved. The workflow is continuing on the server.',
       approved: 'You approved in Telegram. ZipperGen saved your decision and completed the workflow on the server.',
       rejected: 'You rejected the reply in Telegram. ZipperGen saved your decision and completed the workflow without releasing the reply.',
-      error: 'This workflow could not continue. Start over to try again.',
+      error: 'This workflow could not continue. You can start another live run.',
     };
     liveStatus.textContent = messages[state.state] || 'Checking the saved workflow state.';
     const complete = ['approved', 'rejected'].includes(state.state);
     document.querySelector('#live-title').textContent = complete ? 'Your workflow is complete.' : 'Live on our demo server';
-    if (complete) liveStatus.textContent = 'The workflow has completed. Close this window to see the result.';
+    document.querySelector('#new-live-session').hidden = !finishedStates.includes(state.state);
     if (state.state === 'approved') celebrate();
     else clearConfetti();
     if (!state.available && !['approved', 'rejected', 'error'].includes(state.state)) {
@@ -202,7 +203,7 @@ async function poll() {
       document.querySelector('#live-title').textContent = 'Live on our demo server';
       liveState = 'expired';
       changed();
-      liveStatus.textContent = 'This live session has expired. Start a new live session or start over.';
+      liveStatus.textContent = 'This live session has expired. You can start another live run.';
       liveLink.hidden = true;
       clearQR();
       liveDetails.textContent = '';
@@ -225,6 +226,7 @@ async function startLive() {
   }
   count('telegram_requested');
   liveBusy = true;
+  document.querySelector('#new-live-session').hidden = true;
   const generation = requestGeneration;
   changed();
   liveStatus.textContent = 'Creating a separate workflow on the demo server…';
@@ -248,6 +250,13 @@ async function startLive() {
   }
 }
 
+function restartLive() {
+  // Never replace an active approval or duplicate an in-flight creation.
+  if (liveBusy || (liveToken && !finishedStates.includes(liveState))) return;
+  resetTelegram();
+  startLive();
+}
+
 export function renderCompletion(state) {
   const live = liveReview();
   const approved = live.active ? live.state === 'approved' : state.decision === true;
@@ -255,6 +264,7 @@ export function renderCompletion(state) {
   const atDecision = state.entries.at(-1)?.command.startsWith('zg deploy approve ');
   const visible = (approved || rejected) && (live.active || atDecision);
   completion.hidden = !visible;
+  document.querySelector('#restart-live').hidden = !visible || !live.active || !apiBase;
   if (!visible) return false;
   document.querySelector('#completion-message').textContent = live.active
     ? approved
@@ -280,7 +290,7 @@ export function renderTelegram(state, data, runCommand) {
   preview.setAttribute('aria-label', live.active ? 'Live Telegram approval' : 'Simulated Telegram conversation');
   document.querySelector('#preview-message').textContent = decision === true ? 'Approved. The example reply was sent in the simulation.' : decision === false ? 'Rejected. No reply was sent.' : state.service === 'stopped' ? 'The service is stopped. Your approval request is saved.' : 'Send this reply?';
   if (live.active) {
-    document.querySelector('#preview-message').textContent = live.state === 'approved' ? 'Approved in Telegram. The live workflow has completed.' : live.state === 'rejected' ? 'Rejected in Telegram. The live workflow has completed.' : live.state === 'expired' ? 'This live session has expired. Start over to try again.' : live.state === 'error' ? 'The live workflow could not continue. Start over to try again.' : 'This request is handled in Telegram. Open your live run to continue.';
+    document.querySelector('#preview-message').textContent = live.state === 'approved' ? 'Approved in Telegram. The live workflow has completed.' : live.state === 'rejected' ? 'Rejected in Telegram. The live workflow has completed.' : live.state === 'expired' ? 'This live session has expired. Open your live run to start another.' : live.state === 'error' ? 'The live workflow could not continue. Open your live run to start another.' : 'This request is handled in Telegram. Open your live run to continue.';
   }
   document.querySelector('#try-live').hidden = !apiBase || live.active;
   document.querySelector('#live-privacy').hidden = !apiBase || live.active;
@@ -311,10 +321,8 @@ export async function initTelegram() {
   qrDetails.addEventListener('toggle', showQR);
   document.querySelector('#try-live').addEventListener('click', startLive);
   document.querySelector('#resume-live').addEventListener('click', startLive);
-  document.querySelector('#new-live-session').addEventListener('click', () => {
-    resetTelegram();
-    startLive();
-  });
+  document.querySelector('#new-live-session').addEventListener('click', restartLive);
+  document.querySelector('#restart-live').addEventListener('click', restartLive);
   try {
     const config = await (await fetch('./live-config.json', { cache: 'no-store' })).json();
     if (config.api_base) {

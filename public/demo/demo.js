@@ -62,7 +62,7 @@ function choices() {
   if (!state.initialized) return ['Start with an empty project.', [commandButton('zg init')]];
   if (state.agent) return ['Read the request below, then send it with the button or Enter.', ['<button type="submit" form="agent-form" class="enter-button">Send this request <svg class="enter-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="M13 3v6H3m4-4L3 9l4 4" /></svg></button>']];
   if (liveReview().active && state.taskSeen) return [
-    ['approved', 'rejected'].includes(liveReview().state) ? 'Your Telegram decision is saved. Start over to try a new request.' : 'Continue in Telegram, or open your live run.',
+    ['approved', 'rejected'].includes(liveReview().state) ? 'Your Telegram decision is saved. You can start another live run below.' : 'Continue in Telegram, or open your live run.',
     [],
   ];
   if (!state.workflow) return ['Open the coding agent you usually use.', [commandButton('codex'), commandButton('claude')]];
