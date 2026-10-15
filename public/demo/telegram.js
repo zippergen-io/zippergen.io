@@ -101,14 +101,14 @@ async function showQR() {
 
 
 export function liveReview() {
-  return { active: Boolean(liveToken) || liveBusy, state: liveState };
+  return { active: Boolean(liveToken) || liveBusy, state: liveState, telegramUrl };
 }
 
 function changed() {
   document.dispatchEvent(new Event('live-review-change'));
 }
 
-export function resetTelegram() {
+export function resetTelegram({ keepDialog = false } = {}) {
   requestGeneration++;
   clearTimeout(pollTimer);
   clearConfetti();
@@ -122,7 +122,7 @@ export function resetTelegram() {
   hash.delete('live');
   url.hash = hash.toString();
   history.replaceState(null, '', url);
-  liveDialog.close();
+  if (!keepDialog) liveDialog.close();
   liveLink.hidden = true;
   liveLink.removeAttribute('href');
   clearQR();
@@ -236,8 +236,8 @@ async function startLive() {
     if (!/^[A-Za-z0-9_-]{32}$/.test(session.token)) throw new Error('Invalid session');
     liveToken = session.token;
     liveState = 'connecting';
-    changed();
     telegramUrl = safeTelegramLink(session.telegram_url);
+    changed();
     remember();
     document.querySelector('#resume-live').hidden = false;
     await poll();
@@ -253,7 +253,7 @@ async function startLive() {
 function restartLive() {
   // Never replace an active approval or duplicate an in-flight creation.
   if (liveBusy || (liveToken && !finishedStates.includes(liveState))) return;
-  resetTelegram();
+  resetTelegram({ keepDialog: true });
   startLive();
 }
 
@@ -342,8 +342,8 @@ export async function initTelegram() {
   const token = hashToken || saved?.token;
   if (/^[A-Za-z0-9_-]{32}$/.test(token || '')) {
     liveToken = token;
-    changed();
     telegramUrl = saved?.token === token ? safeTelegramLink(saved.telegramUrl) : null;
+    changed();
     document.querySelector('#resume-live').hidden = false;
     if (apiBase) {
       if (hashToken) showLive();

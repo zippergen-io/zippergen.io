@@ -61,7 +61,12 @@ function commandButton(command, label = command, secondary = false) {
 function choices() {
   if (!state.initialized) return ['Start with an empty project.', [commandButton('zg init')]];
   if (state.agent) return ['Read the request below, then send it with the button or Enter.', ['<button type="submit" form="agent-form" class="enter-button">Send this request <svg class="enter-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="M13 3v6H3m4-4L3 9l4 4" /></svg></button>']];
-  if (liveReview().active && state.taskSeen) return [
+  const live = liveReview();
+  if (live.active && live.state === 'connecting') return [
+    live.telegramUrl ? 'Open Telegram below, then press Start to connect this run.' : 'Connect using the Telegram link from the device where you started this run.',
+    [],
+  ];
+  if (live.active && state.taskSeen) return [
     ['approved', 'rejected'].includes(liveReview().state) ? 'Your Telegram decision is saved. You can start another live run below.' : 'Continue in Telegram, or open your live run.',
     [],
   ];
@@ -140,7 +145,12 @@ function render({ focus = false } = {}) {
     (state.workflow && state.decision === null && (!state.taskSeen || state.service === 'stopped'));
   if (hasNextCommand) suggestions.firstElementChild?.setAttribute('data-recommended', '');
   suggestions.hidden = liveReview().active;
-  document.querySelector('#resume-live').hidden = !liveReview().active;
+  const live = liveReview();
+  const connect = document.querySelector('#connect-live');
+  connect.hidden = !live.active || live.state !== 'connecting' || !live.telegramUrl;
+  if (!connect.hidden) connect.href = live.telegramUrl;
+  else connect.removeAttribute('href');
+  document.querySelector('#resume-live').hidden = !live.active;
   document.querySelector('.terminal').classList.toggle('agent-mode', Boolean(state.agent));
   if (state.agent) input.value = state.agent;
   else if (input.disabled) input.value = '';

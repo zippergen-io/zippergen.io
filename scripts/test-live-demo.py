@@ -131,7 +131,10 @@ def main():
                     restart = page.locator('#restart-live')
                 posts = []
                 page.on('request', lambda req: posts.append(req.url) if req.method == 'POST' and '/api/sessions' in req.url else None)
-                restart.evaluate('(button) => { button.click(); button.click(); }')
+                restart.click()
+                # A second click must not create another session.
+                restart.evaluate('(button) => button.click()')
+                expect(page.locator('#live-dialog')).to_be_visible()
                 expect(page.locator('#telegram-link')).to_be_visible()
                 fresh_reader = parse_qs(urlsplit(page.url).fragment)['live'][0]
                 assert fresh_reader != reader
@@ -142,8 +145,19 @@ def main():
                 expect(page.locator('#new-live-session')).to_be_hidden()
                 expect(page.locator('#completion')).to_be_hidden()
                 expect(page.locator('#telegram-qr-code')).to_be_hidden()
+                telegram_url = page.locator('#telegram-link').get_attribute('href')
                 page.locator('#live-dialog button[type=submit]').click()
+                expect(page.locator('#connect-live')).to_be_visible()
+                expect(page.locator('#connect-live')).to_have_attribute('href', telegram_url)
+                expect(page.locator('#hint')).to_contain_text('press Start')
+                # Returning without the URL fragment restores actionable connection guidance.
+                page.goto(args.url)
+                expect(page.locator('#live-dialog')).not_to_be_visible()
+                expect(page.locator('#connect-live')).to_be_visible()
+                expect(page.locator('#connect-live')).to_have_attribute('href', telegram_url)
+                assert parse_qs(urlsplit(page.url).fragment).get('live') is None
                 page.get_by_role('button', name='Start over', exact=True).click()
+                expect(page.locator('#connect-live')).to_be_hidden()
                 assert page.evaluate("localStorage.getItem('zippergen-live-demo-v1')") is None
                 assert not urlsplit(page.url).fragment
                 expect(page.locator('#resume-live')).to_be_hidden()
