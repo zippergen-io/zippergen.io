@@ -38,25 +38,24 @@ with sync_playwright() as p:
         event = "window.dispatchEvent(new Event('focus'))" if index % 2 == 0 else "document.dispatchEvent(new Event('visibilitychange'))"
         page.evaluate(event)
         expect(page.locator('#live-title')).to_have_text('Your workflow is complete.')
-        expect(page.locator('#live-status')).to_contain_text('has completed')
+        expect(page.locator('#completion')).to_be_visible()
+        expect(page.locator('dialog[open]')).to_have_count(0)
         expect(page.get_by_role('link', name='Get started on GitHub')).to_be_visible()
         assert page.locator('#live-next-step').get_attribute('href') == 'https://github.com/zippergen-io/zippergen#quick-start'
         pieces = 60 if outcome == 'approved' and motion == 'no-preference' else 0
-        assert page.evaluate('window.confettiPieces') == 0
+        page.wait_for_function('(pieces) => window.confettiPieces === pieces', arg=pieces)
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
-        page.locator('#live-dialog button[type=submit]').click()
         expect(page.locator('#completion')).to_be_visible()
         expect(page.locator('#completion-message')).to_contain_text('Telegram')
         expect(page.get_by_role('link', name='Get started on GitHub')).to_be_visible()
         expect(page.locator('#live-confetti i')).to_have_count(pieces)
         assert page.locator('#live-confetti').evaluate('(e) => !e.closest("dialog")')
-        page.locator('#resume-live').click()
+        page.evaluate(event)
         expect(page.locator('#live-title')).to_have_text('Your workflow is complete.')
         assert page.evaluate('window.confettiPieces') == pieces
         page.reload()
         expect(page.locator('#live-title')).to_have_text('Your workflow is complete.')
         assert page.evaluate('window.confettiPieces') == 0
-        page.locator('#live-dialog button[type=submit]').click()
         page.get_by_role('button', name='Start over').click()
         expect(page.locator('#live-next-step')).to_be_hidden()
         expect(page.locator('#live-title')).to_have_text('Live on our demo server')
@@ -81,4 +80,4 @@ with sync_playwright() as p:
         expect(page.locator('#live-confetti i')).to_have_count(0)
         context.close()
     browser.close()
-print('Passed: persistent completion in both paths, simulated approval, approved-only confetti, confetti after closing the dialog, immediate refresh on return, no replay on reopen/reload, reduced motion, reset, desktop and mobile.')
+print('Passed: persistent completion in both paths, simulated approval, approved-only confetti, confetti on inline completion, immediate refresh on return, no replay on reopen/reload, reduced motion, reset, desktop and mobile.')

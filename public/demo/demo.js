@@ -1,5 +1,5 @@
 import { count, newCountedAttempt } from './metrics.js';
-import { renderTelegram, renderCompletion, initTelegram, resetTelegram, liveReview } from './telegram.js';
+import { renderTelegram, renderCompletion, renderLive, initTelegram, resetTelegram, liveReview } from './telegram.js';
 
 // A finite command simulation. Nothing here invokes a shell, model, or service.
 const STORAGE_KEY = 'zippergen-shell-demo-v1';
@@ -59,17 +59,10 @@ function commandButton(command, label = command, secondary = false) {
   return `<button type="button" data-command="${escape(command)}"${secondary ? ' class="secondary"' : ''}>${escape(label)}</button>`;
 }
 function choices() {
+  const live = liveReview();
+  if (live.active) return ['', []];
   if (!state.initialized) return ['Start with an empty project.', [commandButton('zg init')]];
   if (state.agent) return ['Read the request below, then send it with the button or Enter.', ['<button type="submit" form="agent-form" class="enter-button">Send this request <svg class="enter-icon" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="M13 3v6H3m4-4L3 9l4 4" /></svg></button>']];
-  const live = liveReview();
-  if (live.active && live.state === 'connecting') return [
-    live.telegramUrl ? 'Open Telegram below, then press Start to connect this run.' : 'Connect using the Telegram link from the device where you started this run.',
-    [],
-  ];
-  if (live.active && state.taskSeen) return [
-    ['approved', 'rejected'].includes(liveReview().state) ? 'Your Telegram decision is saved. You can start another live run below.' : 'Continue in Telegram, or open your live run.',
-    [],
-  ];
   if (!state.workflow) return ['Open the coding agent you usually use.', [commandButton('codex'), commandButton('claude')]];
   if (state.service === 'stopped') return [state.decision === null ? 'The approval is saved. Start the service to continue.' : 'The service is stopped. Your decision is recorded.', [commandButton('zg deploy start'), commandButton('zg deploy tasks'), commandButton('zg deploy status')]];
   if (state.decision !== null) {
@@ -107,7 +100,9 @@ function renderProgress() {
 }
 function render({ focus = false } = {}) {
   const latest = state.entries.at(-1);
-  document.querySelector('main').classList.toggle('code-view', latest?.kind === 'code' && !state.agent);
+  const live = liveReview();
+  document.querySelector('.terminal').classList.toggle('live-mode', live.active);
+  document.querySelector('main').classList.toggle('code-view', latest?.kind === 'code' && !state.agent && !live.active);
   // The screen is fixed. Replace its result instead of appending a transcript.
   // Keep command history in state for the arrow keys and refresh.
   if (latest) {
@@ -117,24 +112,25 @@ function render({ focus = false } = {}) {
   } else {
     output.innerHTML = `<p class="note">${state.workflow ? 'Run a command to inspect this project.' : 'Build a workflow that drafts replies and waits for your approval.'}</p>`;
   }
+  const liveVisible = renderLive();
   const completionVisible = renderCompletion(state);
-  const telegramVisible = renderTelegram(state, data, runCommand) && !completionVisible;
-  if (completionVisible) document.querySelector('#telegram-preview').hidden = true;
-  output.hidden = Boolean(state.agent) || telegramVisible || completionVisible;
+  const telegramVisible = renderTelegram(state, data, runCommand) && !completionVisible && !liveVisible;
+  if (completionVisible || liveVisible) document.querySelector('#telegram-preview').hidden = true;
+  output.hidden = Boolean(state.agent) || telegramVisible || completionVisible || liveVisible;
   document.querySelector('#result-label').textContent = telegramVisible ? (liveReview().active ? 'Telegram' : 'Telegram preview') : state.agent ? 'Request' : latest?.speaker === 'note' ? 'About' : !latest ? 'Example' : 'Output';
   const stepNote = document.querySelector('#step-note');
-  stepNote.hidden = Boolean(state.agent) || completionVisible || !latest?.note;
+  stepNote.hidden = Boolean(state.agent) || completionVisible || liveVisible || !latest?.note;
   stepNote.querySelector('p').textContent = latest?.note || '';
   document.querySelector('#result-command').textContent = latest ? latest.speaker === 'shell' ? latest.command : latest.speaker === 'agent' ? 'Coding agent' : 'Demo' : '';
   if (telegramVisible) document.querySelector('#result-command').textContent = liveReview().active ? 'Live on our demo server' : 'Simulated';
-  if (completionVisible) {
-    document.querySelector('#result-label').textContent = 'Completed';
+  if (completionVisible || liveVisible) {
+    document.querySelector('#result-label').textContent = completionVisible ? 'Completed' : 'Live run';
     document.querySelector('#result-command').textContent = liveReview().active ? 'Live on our demo server' : 'Simulated';
   }
   output.scrollTop = 0;
   const [hint, buttons] = choices();
   document.querySelector('#step-title').textContent = state.agent ? 'Write the request'
-    : completionVisible ? 'Completed' : state.service === 'stopped' ? 'Resume the service'
+    : completionVisible ? 'Completed' : liveVisible ? 'Live run' : state.service === 'stopped' ? 'Resume the service'
     : state.service === 'running' ? 'Review the request' : state.configured ? 'Setup'
     : state.inspected ? 'Inspect the workflow' : state.workflow ? 'Workflow'
     : state.initialized ? 'Choose your coding agent' : 'Create a project';
@@ -145,12 +141,6 @@ function render({ focus = false } = {}) {
     (state.workflow && state.decision === null && (!state.taskSeen || state.service === 'stopped'));
   if (hasNextCommand) suggestions.firstElementChild?.setAttribute('data-recommended', '');
   suggestions.hidden = liveReview().active;
-  const live = liveReview();
-  const connect = document.querySelector('#connect-live');
-  connect.hidden = !live.active || live.state !== 'connecting' || !live.telegramUrl;
-  if (!connect.hidden) connect.href = live.telegramUrl;
-  else connect.removeAttribute('href');
-  document.querySelector('#resume-live').hidden = !live.active;
   document.querySelector('.terminal').classList.toggle('agent-mode', Boolean(state.agent));
   if (state.agent) input.value = state.agent;
   else if (input.disabled) input.value = '';
@@ -158,7 +148,7 @@ function render({ focus = false } = {}) {
   document.querySelector('#command-form button').disabled = Boolean(state.agent);
   updateCommandPriority();
   document.querySelector('#agent-form').hidden = !state.agent;
-  document.querySelector('#controls').hidden = false;
+  document.querySelector('#controls').hidden = live.active;
   if (state.agent) {
     const prompt = document.querySelector('#agent-prompt');
     prompt.value = data.prompt;

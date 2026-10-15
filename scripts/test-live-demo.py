@@ -109,8 +109,10 @@ def main():
                 expect(page.locator('#live-status')).to_contain_text('completed', timeout=15000)
                 assert page.evaluate("JSON.parse(localStorage.getItem('zippergen-shell-demo-v1')).decision") is None
                 assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+                expect(page.locator('#completion')).to_be_visible()
+                expect(page.locator('#live-run')).to_be_hidden()
+                expect(page.locator('dialog[open]')).to_have_count(0)
                 page.screenshot(path=str(args.screenshots / f'live-complete-{index}.png'))
-                page.locator('#live-dialog button[type=submit]').click()
                 expect(page.locator('#preview-approve')).to_be_disabled()
                 expect(page.locator('#preview-reject')).to_be_disabled()
                 expect(page.locator('#preview-message')).to_contain_text('Approved in Telegram' if yes else 'Rejected in Telegram')
@@ -119,22 +121,18 @@ def main():
                 page.get_by_role('button', name='Run command', exact=True).click()
                 assert page.evaluate("JSON.parse(localStorage.getItem('zippergen-shell-demo-v1')).decision") is None
                 assert service.status(reader)['state'] == expected
-                # Both completion surfaces can create a fresh run without replaying setup.
+                # Completion starts a fresh run in the same main-screen result area.
                 shell_before = page.evaluate("localStorage.getItem('zippergen-shell-demo-v1')")
                 expect(page.locator('#restart-live')).to_be_visible()
                 page.screenshot(path=str(args.screenshots / f'live-restart-{index}.png'))
-                if yes:
-                    page.locator('#resume-live').click()
-                    expect(page.locator('#new-live-session')).to_be_visible()
-                    restart = page.locator('#new-live-session')
-                else:
-                    restart = page.locator('#restart-live')
+                restart = page.locator('#restart-live')
                 posts = []
                 page.on('request', lambda req: posts.append(req.url) if req.method == 'POST' and '/api/sessions' in req.url else None)
                 restart.click()
                 # A second click must not create another session.
                 restart.evaluate('(button) => button.click()')
-                expect(page.locator('#live-dialog')).to_be_visible()
+                expect(page.locator('#live-run')).to_be_visible()
+                expect(page.locator('dialog[open]')).to_have_count(0)
                 expect(page.locator('#telegram-link')).to_be_visible()
                 fresh_reader = parse_qs(urlsplit(page.url).fragment)['live'][0]
                 assert fresh_reader != reader
@@ -146,21 +144,21 @@ def main():
                 expect(page.locator('#completion')).to_be_hidden()
                 expect(page.locator('#telegram-qr-code')).to_be_hidden()
                 telegram_url = page.locator('#telegram-link').get_attribute('href')
-                page.locator('#live-dialog button[type=submit]').click()
-                expect(page.locator('#connect-live')).to_be_visible()
-                expect(page.locator('#connect-live')).to_have_attribute('href', telegram_url)
-                expect(page.locator('#hint')).to_contain_text('press Start')
+                expect(page.locator('#telegram-link')).to_be_visible()
+                expect(page.locator('#telegram-link')).to_have_attribute('href', telegram_url)
+                expect(page.locator('#live-status')).to_contain_text('press Start')
+                page.screenshot(path=str(args.screenshots / f'inline-restart-{index}.png'))
                 # Returning without the URL fragment restores actionable connection guidance.
                 page.goto(args.url)
-                expect(page.locator('#live-dialog')).not_to_be_visible()
-                expect(page.locator('#connect-live')).to_be_visible()
-                expect(page.locator('#connect-live')).to_have_attribute('href', telegram_url)
+                expect(page.locator('dialog[open]')).to_have_count(0)
+                expect(page.locator('#telegram-link')).to_be_visible()
+                expect(page.locator('#telegram-link')).to_have_attribute('href', telegram_url)
                 assert parse_qs(urlsplit(page.url).fragment).get('live') is None
                 page.get_by_role('button', name='Start over', exact=True).click()
-                expect(page.locator('#connect-live')).to_be_hidden()
+                expect(page.locator('#telegram-link')).to_be_hidden()
                 assert page.evaluate("localStorage.getItem('zippergen-live-demo-v1')") is None
                 assert not urlsplit(page.url).fragment
-                expect(page.locator('#resume-live')).to_be_hidden()
+                expect(page.locator('#live-run')).to_be_hidden()
                 page.reload()
                 choose('zg init')
                 choose('claude')
@@ -186,8 +184,7 @@ def main():
                     assert decoded == page.locator('#telegram-link').get_attribute('href')
                     assert parse_qs(urlsplit(decoded).query)['start'][0] != start
                 page.route('**/api/session*', lambda route: route.fulfill(status=410, json={'error': 'expired'}))
-                page.locator('#live-dialog button[type=submit]').click()
-                page.locator('#resume-live').click()
+                page.evaluate("window.dispatchEvent(new Event('focus'))")
                 expect(page.locator('#live-status')).to_contain_text('expired')
                 expect(page.locator('#telegram-qr')).to_be_hidden()
                 expect(page.locator('#telegram-link')).to_be_hidden()

@@ -7,7 +7,7 @@ let pollTimer;
 let requestGeneration = 0;
 let liveBusy = false;
 let liveState = null;
-const liveDialog = document.querySelector('#live-dialog');
+const livePanel = document.querySelector('#live-run');
 const liveStatus = document.querySelector('#live-status');
 const liveLink = document.querySelector('#telegram-link');
 const liveDetails = document.querySelector('#live-details');
@@ -39,7 +39,7 @@ function clearConfetti() {
 
 function celebrate(key = liveToken) {
   if (key === liveToken && liveState !== 'approved') return;
-  if (!key || completion.hidden || liveDialog.open || document.hidden || celebrated.has(key)) return;
+  if (!key || completion.hidden || document.hidden || celebrated.has(key)) return;
   celebrated.add(key);
   try { localStorage.setItem(celebratedKey, JSON.stringify([...celebrated].slice(-32))); } catch { /* Storage is optional. */ }
   if (reducedMotion.matches) return;
@@ -101,14 +101,14 @@ async function showQR() {
 
 
 export function liveReview() {
-  return { active: Boolean(liveToken) || liveBusy, state: liveState, telegramUrl };
+  return { active: Boolean(liveToken) || liveBusy || liveState === 'error', state: liveState, telegramUrl };
 }
 
 function changed() {
   document.dispatchEvent(new Event('live-review-change'));
 }
 
-export function resetTelegram({ keepDialog = false } = {}) {
+export function resetTelegram() {
   requestGeneration++;
   clearTimeout(pollTimer);
   clearConfetti();
@@ -122,12 +122,10 @@ export function resetTelegram({ keepDialog = false } = {}) {
   hash.delete('live');
   url.hash = hash.toString();
   history.replaceState(null, '', url);
-  if (!keepDialog) liveDialog.close();
   liveLink.hidden = true;
   liveLink.removeAttribute('href');
   clearQR();
   liveStatus.textContent = liveDetails.textContent = '';
-  document.querySelector('#resume-live').hidden = true;
   document.querySelector('#new-live-session').hidden = true;
   changed();
 }
@@ -146,9 +144,12 @@ async function api(path, options = {}) {
   return body;
 }
 
-function showLive() {
-  clearConfetti();
-  if (!liveDialog.open) liveDialog.showModal();
+export function renderLive() {
+  const live = liveReview();
+  const visible = live.active && !['approved', 'rejected'].includes(live.state);
+  livePanel.hidden = !visible;
+  document.querySelector('#use-simulation').hidden = live.state !== 'error' || Boolean(liveToken);
+  return visible;
 }
 
 function safeTelegramLink(value) {
@@ -188,7 +189,7 @@ async function poll() {
     liveStatus.textContent = messages[state.state] || 'Checking the saved workflow state.';
     const complete = ['approved', 'rejected'].includes(state.state);
     document.querySelector('#live-title').textContent = complete ? 'Your workflow is complete.' : 'Live on our demo server';
-    document.querySelector('#new-live-session').hidden = !finishedStates.includes(state.state);
+    document.querySelector('#new-live-session').hidden = !['error', 'expired'].includes(state.state);
     if (state.state === 'approved') celebrate();
     else clearConfetti();
     if (!state.available && !['approved', 'rejected', 'error'].includes(state.state)) {
@@ -217,11 +218,13 @@ async function poll() {
 }
 
 async function startLive() {
-  showLive();
+  clearConfetti();
   if (liveBusy) return;
   if (liveToken) { await poll(); return; }
   if (!apiBase) {
-    liveStatus.textContent = 'The live server is not connected to this preview yet. You can approve or reject in the simulated Telegram view.';
+    liveState = 'error';
+    liveStatus.textContent = 'The live server is not connected to this preview. You can use the simulated preview instead.';
+    changed();
     return;
   }
   count('telegram_requested');
@@ -230,6 +233,8 @@ async function startLive() {
   const generation = requestGeneration;
   changed();
   liveStatus.textContent = 'Creating a separate workflow on the demo server…';
+  document.querySelector('#live-title').focus({ preventScroll: true });
+  livePanel.scrollIntoView({ block: 'nearest' });
   try {
     const session = await api('/api/sessions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
     if (generation !== requestGeneration) return;
@@ -239,10 +244,10 @@ async function startLive() {
     telegramUrl = safeTelegramLink(session.telegram_url);
     changed();
     remember();
-    document.querySelector('#resume-live').hidden = false;
     await poll();
   } catch (error) {
     if (generation !== requestGeneration) return;
+    liveState = 'error';
     liveStatus.textContent = error.status === 429 ? error.message : 'The live demo is unavailable. Please try again later or use the simulated preview.';
     document.querySelector('#new-live-session').hidden = false;
   } finally {
@@ -253,7 +258,7 @@ async function startLive() {
 function restartLive() {
   // Never replace an active approval or duplicate an in-flight creation.
   if (liveBusy || (liveToken && !finishedStates.includes(liveState))) return;
-  resetTelegram({ keepDialog: true });
+  resetTelegram();
   startLive();
 }
 
@@ -290,7 +295,7 @@ export function renderTelegram(state, data, runCommand) {
   preview.setAttribute('aria-label', live.active ? 'Live Telegram approval' : 'Simulated Telegram conversation');
   document.querySelector('#preview-message').textContent = decision === true ? 'Approved. The example reply was sent in the simulation.' : decision === false ? 'Rejected. No reply was sent.' : state.service === 'stopped' ? 'The service is stopped. Your approval request is saved.' : 'Send this reply?';
   if (live.active) {
-    document.querySelector('#preview-message').textContent = live.state === 'approved' ? 'Approved in Telegram. The live workflow has completed.' : live.state === 'rejected' ? 'Rejected in Telegram. The live workflow has completed.' : live.state === 'expired' ? 'This live session has expired. Open your live run to start another.' : live.state === 'error' ? 'The live workflow could not continue. Open your live run to start another.' : 'This request is handled in Telegram. Open your live run to continue.';
+    document.querySelector('#preview-message').textContent = live.state === 'approved' ? 'Approved in Telegram. The live workflow has completed.' : live.state === 'rejected' ? 'Rejected in Telegram. The live workflow has completed.' : live.state === 'expired' ? 'This live session has expired. You can start another live run.' : live.state === 'error' ? 'The live workflow could not continue. You can start another live run.' : 'This request is handled in Telegram.';
   }
   document.querySelector('#try-live').hidden = !apiBase || live.active;
   document.querySelector('#live-privacy').hidden = !apiBase || live.active;
@@ -307,10 +312,6 @@ export async function initTelegram() {
   const refreshLive = () => {
     if (liveToken && apiBase && !document.hidden) poll();
   };
-  liveDialog.addEventListener('close', () => {
-    celebrate();
-    refreshLive();
-  });
   window.addEventListener('focus', refreshLive);
   document.addEventListener('demo-measurement-change', refreshLive);
   document.addEventListener('visibilitychange', () => {
@@ -320,9 +321,11 @@ export async function initTelegram() {
   reducedMotion.addEventListener('change', () => { if (reducedMotion.matches) clearConfetti(); });
   qrDetails.addEventListener('toggle', showQR);
   document.querySelector('#try-live').addEventListener('click', startLive);
-  document.querySelector('#resume-live').addEventListener('click', startLive);
   document.querySelector('#new-live-session').addEventListener('click', restartLive);
   document.querySelector('#restart-live').addEventListener('click', restartLive);
+  document.querySelector('#use-simulation').addEventListener('click', () => {
+    if (!liveToken && !liveBusy) resetTelegram();
+  });
   try {
     const config = await (await fetch('./live-config.json', { cache: 'no-store' })).json();
     if (config.api_base) {
@@ -343,11 +346,8 @@ export async function initTelegram() {
   if (/^[A-Za-z0-9_-]{32}$/.test(token || '')) {
     liveToken = token;
     telegramUrl = saved?.token === token ? safeTelegramLink(saved.telegramUrl) : null;
+    liveStatus.textContent = apiBase ? 'Checking your saved live run…' : 'The live server is not connected to this preview.';
     changed();
-    document.querySelector('#resume-live').hidden = false;
-    if (apiBase) {
-      if (hashToken) showLive();
-      poll();
-    }
+    if (apiBase) poll();
   }
 }

@@ -57,7 +57,7 @@ def main():
             run('zg deploy tasks')
             page.locator('#try-live').click()
             expect(page.locator('#new-live-session')).to_be_visible()
-            page.locator('#live-dialog button[type=submit]').click()
+            page.locator('#use-simulation').click()
             page.locator('#preview-reject').click()
             expect(page.locator('#completion')).to_be_visible()
             page.locator('#live-next-step').click()
