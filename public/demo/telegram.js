@@ -269,7 +269,6 @@ export function renderCompletion(state) {
   const atDecision = state.entries.at(-1)?.command.startsWith('zg deploy approve ');
   const visible = (approved || rejected) && (live.active || atDecision);
   completion.hidden = !visible;
-  document.querySelector('#restart-live').hidden = !visible || !live.active || !apiBase;
   if (!visible) return false;
   document.querySelector('#completion-message').textContent = live.active
     ? approved
@@ -322,7 +321,6 @@ export async function initTelegram() {
   qrDetails.addEventListener('toggle', showQR);
   document.querySelector('#try-live').addEventListener('click', startLive);
   document.querySelector('#new-live-session').addEventListener('click', restartLive);
-  document.querySelector('#restart-live').addEventListener('click', restartLive);
   document.querySelector('#use-simulation').addEventListener('click', () => {
     if (!liveToken && !liveBusy) resetTelegram();
   });

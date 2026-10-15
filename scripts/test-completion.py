@@ -56,7 +56,7 @@ with sync_playwright() as p:
         page.reload()
         expect(page.locator('#live-title')).to_have_text('Your workflow is complete.')
         assert page.evaluate('window.confettiPieces') == 0
-        page.get_by_role('button', name='Start over').click()
+        page.get_by_role('button', name='Start demo again', exact=True).click()
         expect(page.locator('#live-next-step')).to_be_hidden()
         expect(page.locator('#live-title')).to_have_text('Live on our demo server')
         assert not errors, errors

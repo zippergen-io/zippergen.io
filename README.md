@@ -43,8 +43,9 @@ terminal. Skipped inspection stays marked as not explored.
 
 Versioned browser storage keeps progress when available. Start over clears the
 simulation and forgets the current live session, so the next live attempt asks
-for a new approval. After a live run finishes, “Start another live run” creates
-a fresh Telegram approval directly, without repeating the simulated setup.
+for a new approval. After a run finishes, “Start demo again” resets the entire demo
+to the first `zg init` step, just like Start over. It does not create a live
+session until the visitor explicitly reaches and chooses the Telegram step again.
 Connection instructions, the Telegram link, the optional QR code, and run status
 all appear in the main result area. There is no separate live-run window.
 Reopening the page restores the current run in that same area. Earlier server sessions expire after 30 minutes.

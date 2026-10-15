@@ -35,7 +35,7 @@ def main():
     args = parser.parse_args()
     args.screenshots.mkdir(parents=True, exist_ok=True)
     origin = '{0.scheme}://{0.netloc}'.format(urlsplit(args.url))
-    service = Sessions(args.state, Bot(), 'zippergen_demo_bot', starts_per_hour=8)
+    service = Sessions(args.state, Bot(), 'zippergen_demo_bot')
     service.healthy = True
     service.last_poll = service.last_delivery = time.time()
     http = make_server('127.0.0.1', 0, API(service, [origin]), handler_class=QuietHandler)
@@ -121,45 +121,29 @@ def main():
                 page.get_by_role('button', name='Run command', exact=True).click()
                 assert page.evaluate("JSON.parse(localStorage.getItem('zippergen-shell-demo-v1')).decision") is None
                 assert service.status(reader)['state'] == expected
-                # Completion starts a fresh run in the same main-screen result area.
-                shell_before = page.evaluate("localStorage.getItem('zippergen-shell-demo-v1')")
-                expect(page.locator('#restart-live')).to_be_visible()
-                page.screenshot(path=str(args.screenshots / f'live-restart-{index}.png'))
-                restart = page.locator('#restart-live')
+                # Restart means the whole demo, not just another Telegram session.
+                old_simulation = page.evaluate("JSON.parse(localStorage.getItem('zippergen-shell-demo-v1')).simulationId")
+                expect(page.get_by_role('button', name='Start demo again', exact=True)).to_be_visible()
                 posts = []
                 page.on('request', lambda req: posts.append(req.url) if req.method == 'POST' and '/api/sessions' in req.url else None)
-                restart.click()
-                # A second click must not create another session.
-                restart.evaluate('(button) => button.click()')
-                expect(page.locator('#live-run')).to_be_visible()
-                expect(page.locator('dialog[open]')).to_have_count(0)
-                expect(page.locator('#telegram-link')).to_be_visible()
-                fresh_reader = parse_qs(urlsplit(page.url).fragment)['live'][0]
-                assert fresh_reader != reader
-                assert service.status(fresh_reader)['state'] == 'connecting'
-                assert service.status(reader)['state'] == expected
-                assert len(posts) == 1
-                assert page.evaluate("localStorage.getItem('zippergen-shell-demo-v1')") == shell_before
-                expect(page.locator('#new-live-session')).to_be_hidden()
+                page.get_by_role('button', name='Start demo again', exact=True).click()
+                expect(page.locator('[data-command="zg init"]')).to_be_visible()
+                expect(page.locator('#step-title')).to_have_text('Create a project')
+                expect(page.locator('#live-run')).to_be_hidden()
                 expect(page.locator('#completion')).to_be_hidden()
-                expect(page.locator('#telegram-qr-code')).to_be_hidden()
-                telegram_url = page.locator('#telegram-link').get_attribute('href')
-                expect(page.locator('#telegram-link')).to_be_visible()
-                expect(page.locator('#telegram-link')).to_have_attribute('href', telegram_url)
-                expect(page.locator('#live-status')).to_contain_text('press Start')
-                page.screenshot(path=str(args.screenshots / f'inline-restart-{index}.png'))
-                # Returning without the URL fragment restores actionable connection guidance.
-                page.goto(args.url)
                 expect(page.locator('dialog[open]')).to_have_count(0)
-                expect(page.locator('#telegram-link')).to_be_visible()
-                expect(page.locator('#telegram-link')).to_have_attribute('href', telegram_url)
-                assert parse_qs(urlsplit(page.url).fragment).get('live') is None
-                page.get_by_role('button', name='Start over', exact=True).click()
-                expect(page.locator('#telegram-link')).to_be_hidden()
+                state = page.evaluate("JSON.parse(localStorage.getItem('zippergen-shell-demo-v1'))")
+                assert not any(state[key] for key in ['initialized', 'workflow', 'inspected', 'configured', 'taskSeen'])
+                assert state['entries'] == [] and state['service'] == 'idle'
+                assert state['decision'] is None and state['simulationId'] != old_simulation
                 assert page.evaluate("localStorage.getItem('zippergen-live-demo-v1')") is None
                 assert not urlsplit(page.url).fragment
-                expect(page.locator('#live-run')).to_be_hidden()
+                assert posts == []
+                assert service.status(reader)['state'] == expected
+                page.screenshot(path=str(args.screenshots / f'demo-restarted-{index}.png'))
                 page.reload()
+                expect(page.locator('[data-command="zg init"]')).to_be_visible()
+                assert posts == []
                 choose('zg init')
                 choose('claude')
                 page.locator('#agent-prompt').press('Enter')

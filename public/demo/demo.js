@@ -375,14 +375,16 @@ suggestions.addEventListener('click', event => {
   else if ('replay' in button.dataset) replay();
   else if ('setup' in button.dataset) showInformation('Setup in your project', '<p>The example workflow can work with a mock model and terminal approval. Telegram delivery uses your own bot and private chat.</p><pre>zg provider configure approval-bot telegram\nzg provider set-credential approval-bot\nzg connector configure approval-chat approval-bot\nzg connector assign Mailbox approval-chat\nzg config</pre><p>Run these in your own terminal. Enter the token only in the hidden credential prompt. The live website example uses our demo bot.</p><details><summary>Use a real model later</summary><pre>zg provider configure writer-provider openai\nzg provider set-credential writer-provider\nzg model configure writer writer-provider YOUR_MODEL\nzg model assign Writer writer</pre><p>Replace YOUR_MODEL with a model available to your account. This is optional and is not used by the public demo.</p></details>');
 });
-document.querySelector('#reset').addEventListener('click', () => {
+function restartDemo() {
   if (!data) return;
   state = fresh();
   newCountedAttempt();
   resetTelegram();
   input.value = '';
   render({ focus: true });
-});
+}
+document.querySelector('#reset').addEventListener('click', restartDemo);
+document.querySelector('#restart-demo').addEventListener('click', restartDemo);
 document.querySelector('#about').addEventListener('click', showAbout);
 document.querySelector('#help').addEventListener('click', () => {
   if (state.agent) {
